@@ -1,14 +1,21 @@
 // app entry
 import React from 'react';
-import { AppRegistry, Platform, View, Text } from 'react-native';
-import { Router, Link, RouteProps } from '../../src/index';
+import {
+  AppRegistry,
+  Platform,
+  View,
+  Text,
+  ViewStyle,
+  StyleProp,
+} from 'react-native';
+import { Router, Link, RouteProps } from 'react-navigation-library';
 
 function App() {
   return (
     <AppContainer>
-      <Router type="tabs" showLocationBar initialPath="/signup?test=value">
+      <Router type="tabs" showLocationBar initialPath="/">
         <Login path="login" />
-        <MyScreen initial title="Home">
+        <MyScreen initialRoute title="Home">
           <MyLink to="login">Login</MyLink>
           <MyLink to="signup">Signup</MyLink>
         </MyScreen>
@@ -36,7 +43,7 @@ function Onboarding({ children, state }: RouteProps<{}, Param>) {
 function Signup({ children }: any) {
   return (
     <Router type="tabs">
-      <MyScreen initial title="Signup" linkTo="onboarding/1" />
+      <MyScreen initialRoute title="Signup" linkTo="onboarding/1" />
       <Onboarding path="onboarding" />
     </Router>
   );
@@ -53,7 +60,7 @@ function Login({ children }: any) {
         linkTo="../reset-password"
       />
 
-      <MyScreen initial title="Login">
+      <MyScreen initialRoute title="Login">
         <MyLink to="forgot-password">Forgot password?</MyLink>
       </MyScreen>
     </Router>
@@ -86,21 +93,22 @@ function MyScreen({ title, color, linkTo, children }: any) {
   );
 }
 
+const containerStyle: StyleProp<ViewStyle> = Platform.select({
+  web: {
+    width: 400,
+    height: 500,
+    borderWidth: 1,
+    marginVertical: 10,
+    marginHorizontal: 'auto',
+    overflow: 'hidden',
+  },
+  default: {
+    flex: 1,
+  },
+});
+
 function AppContainer({ children }: any) {
-  return (
-    <View
-      style={{
-        width: 400,
-        height: 500,
-        borderWidth: 1,
-        marginVertical: 10,
-        marginHorizontal: 'auto',
-        overflow: 'hidden',
-      }}
-    >
-      {children}
-    </View>
-  );
+  return <View style={containerStyle}>{children}</View>;
 }
 
 const APP_NAME = 'example';

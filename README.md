@@ -14,6 +14,8 @@ this ships with a location bar that can be used as a development tool. it can be
 
 a basic navigation example can be found in the `/example` folder
 
+[codesandbox](https://codesandbox.io/s/github/andyboythekid/react-navigation-library/tree/master/example)
+
 ```
 import { View, Text } from 'react-native';
 import { Router, Link, RouteProps } from 'react-navigation-library';

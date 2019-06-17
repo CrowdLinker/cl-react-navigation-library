@@ -90,7 +90,7 @@ interface NavigatorProps {
 
 export interface RouteProps<P = {}, S = {}> {
   path?: string;
-  initial?: boolean;
+  initialRoute?: boolean;
   unmountOnExit?: boolean;
   query?: string;
   params?: P;
@@ -237,7 +237,7 @@ export { Router, Link };
 
 interface Route extends Navigation {
   pathname: string;
-  initial?: boolean;
+  initialRoute?: boolean;
   params?: Object;
   query: string;
 }
@@ -265,7 +265,7 @@ function createRoutes(
         exact: false,
       })
     ) {
-      if (!route.initial) {
+      if (!route.initialRoute) {
         activeIndex = index;
       } else {
         if (activeIndex === -1) {
@@ -303,7 +303,7 @@ function createRoute(
     query,
     pathname,
     navigate,
-    initial: element.props.initial,
+    initialRoute: element.props.initialRoute,
   };
 }
 
@@ -311,7 +311,7 @@ function containsChildRouteComponent(children: any) {
   let hasPath = false;
 
   Children.forEach(children, (element: any) => {
-    if (element.props.initial || element.props.path) {
+    if (element.props.initialRoute || element.props.path) {
       hasPath = true;
     }
   });
@@ -353,7 +353,7 @@ function getParams(
 }
 
 function getQuery(location: string): string {
-  const [_, query] = location.split('?');
+  const [, query] = location.split('?');
   return query || '';
 }
 

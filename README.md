@@ -1,273 +1,51 @@
-# React Native Navigation Library
+# react-navigation-library
 
-## What is this?
+this library attempts to provide a similar api to @reach/router but with a native focus. the key difference between the two is that your screens are kept alive unless you specify the `unmountOnExit` flag to your screen. this is to maintain UI state that can't (easily) be computed, such as scroll position in a sibling tab view or nested scroll view. some other differences are that it handles transitions out of the box, and has an implementation of location akin to that found in browsers and react-router-native.
 
-A(nother) routing library for react-native.
+having routing at the core of your app architecture has a lot of benefits. deep links are a lot easier to set up, navigating to specific screens while developing is a breeze, and your markup is a lot like what a web app might look like.
 
-I love using libraries like @reach/router, react-router, and react-navigation, however there are parts from each that I wish the other had, and some parts I wish they didnt. This library attempts to fall somewhere in the middle of these great libraries!
+its important to be able to render your subrouters in isolation when writing integration testing or styling nested screens. this is great because subrouters are independent of parent navigation architecture. like @reach/router, this library will render the first router in the tree as a provider, and it supports relative navigation paths, so subrouters should behave as expected when renderd in isolation.
 
-[Codesandbox Example](https://codesandbox.io/s/examples-j0n3q)
+there are no opinions about your components, so you can render whatever you like and this library will manage how they are focused. that being said, there are a few default components that are unique to native navigation and to individual platforms. these can be a pain to get consistent, so react-navigation-library ships with some helper containers to wrap around your custom header/tabbar components if you'd like.
 
-## Features
-
-- routing API very similar to reach/router, with a few caveats
-- stacks / tabs / switches similar (in behaviour) to react-navigation
-- no opinions about what you render, just how it becomes focused
-- nice development experience by navigating to any screen via url
-- feels more 'component-y' than react-navigation
+this ships with a location bar that can be used as a development tool. it can be enabled by passing the `showLocationBar` flag to any of your routers to make navigation while developing a bit easier.
 
 ## Example
 
+a basic navigation example can be found in the `/example` folder
+
 ```
-import React, { useState } from "react";
+import { View, Text } from 'react-native';
+import { Router, Link, RouteProps } from 'react-navigation-library';
 
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  SafeAreaView,
-  Button,
-} from 'react-native'
+function App() {
+  // the order of your routes is important because it determines how they are focused.
+  // <Login /> will come into focus from the left and <Signup /> will come into focus from the right
 
-import {
-  Router,
-  Screen,
-  Link,
-  Headers,
-  Header,
-  Screens,
-  RouteProps,
-  StateRoute,
-} from 'react-native-navigation-library'
-
-// Router will render matching `Routes` in its `Screens` container
-// You can specify an initial path to render in the top level router of your app
-// The location bar will only appear in development mode, and is meant to help, but can be hidden
-
-function Example() {
   return (
     <AppContainer>
-      <Router hideLocationBar={false}>
-        <Headers>
-          {/* '*' signifies the default route for this navigator */}
-          <Header path="*">
-            <MyHeader>
-              <Text>Default</Text>
-            </MyHeader>
-          </Header>
 
-          {/* Routes can match w/ params */}
-          <Header path=":title">
-            {({ params }: any) => (
-              <MyHeader>
-                <Text>{params && params.title}</Text>
-              </MyHeader>
-            )}
-          </Header>
+      <Router showLocationBar initialPath="/signup?referral_code=abc123">
 
-          {/* Override previous matches for specific route */}
-          <Header path="home">
-            <MyHeader>
-              <Text>Home screen</Text>
-            </MyHeader>
-          </Header>
-        </Headers>
+        <Login path="login" unmountOnExit />
+        <Entry initialRoute />
+        <Signup path="signup" />
 
-        {/* Screens can be stack, tabs, or switch */}
-        <Screens type="tabs">
-          <Screen path="*">
-            <Welcome />
-          </Screen>
-
-          <Screen path="signup">
-            <Signup />
-          </Screen>
-
-          <Screen path="home">
-            <Home />
-          </Screen>
-        </Screens>
       </Router>
+
     </AppContainer>
-  )
-}
-
-// You can navigate to any screen by url with a `Link` component
-
-function Home() {
-  return (
-    <View style={styles.container}>
-      <Title>Home</Title>
-      <Link to="/">
-        <Text style={styles.instructions}>Welcome</Text>
-      </Link>
-    </View>
-  )
-}
-
-// Links can also navigate by relative paths
-
-function Welcome() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.welcome}>Welcome!</Text>
-      <Link to="../signup">
-        <Text style={styles.instructions}>Sign up</Text>
-      </Link>
-    </View>
   );
-}
-
-// You can match routes dynamically with params -- priority is given to the last matching route
-
-function RouteHeader() {
-  return (
-    <Router>
-      <Screens style={{ height: 60 }}>
-        <Route path=":title">
-          {({ params }: any) => (
-            <Title>{capitalizeFirstLetter(params.title)}</Title>
-          )}
-        </Route>
-
-        <!-- Override the above match for a specific screen -->
-        <Route path="signup/onboarding">
-          <Title>Onboarding</Title>
-        </Route>
-      </Screens>
-    </Router>
-  );
-}
-
-// Routes will receive a `navigate` prop to imperatively update location
-// e.g navigate('/welcome') or by a relative path navigate('../welcome')
-
-function Signup({ navigate }: StateRoute<{}>) {
-  function submitSignup({ email }: { email: string }) {
-    // You can pass any state object as a second argument to the navigate() function
-    navigate && navigate('/signup/onboarding', { email })
-  }
-
-  return (
-    <Router>
-      <Screens type="tabs">
-        <Screen path="*">
-          <View style={styles.container}>
-            <Text style={styles.welcome}>Signup</Text>
-
-            <Form onPress={submitSignup} />
-
-            <Link to="../">
-              <Text style={styles.welcome}>Go back</Text>
-            </Link>
-          </View>
-        </Screen>
-
-        <Screen path="onboarding">
-          <Onboarding />
-        </Screen>
-      </Screens>
-    </Router>
-  )
-}
-
-// Each route will receive an optional state prop where you can access any passed state
-
-function Onboarding({ state }: StateRoute<{ email: string }>) {
-  const email = state ? state.email : ''
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.instructions}>{`Welcome to the app ${email}!`}</Text>
-      <Link to="/home">
-        <Text>Home</Text>
-      </Link>
-
-      <Link to="../">
-        <Text>Back</Text>
-      </Link>
-    </View>
-  );
-}
-
-// HELPERS
-
-function Title({ children }: { children: React.ReactNode }) {
-  return <Text style={styles.welcome}>{children}</Text>
-}
-
-function MyHeader({ children }: any) {
-  return (
-    <View style={[styles.centered, { backgroundColor: 'white' }]}>
-      {children}
-    </View>
-  )
 }
 
 function AppContainer({ children }: any) {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>{children}</View>
-    </SafeAreaView>
-  )
-}
-
-function Form({ onPress }: any) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-
-  return (
     <View
       style={{
-        padding: 10,
-        height: 200,
-        width: 200,
-        justifyContent: 'space-around',
-      }}>
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} />
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-      />
-
-      <Button title="Go" onPress={() => onPress({ email, password })} />
+        flex:  1,
+      }}
+    >
+      {children}
     </View>
-  )
+  );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    backgroundColor: 'aquamarine',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-  tabs: {
-    height: 60,
-    flexDirection: 'row',
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-})
 ```
-
-## Notes
-
-- `v0.1.x` and below has been migrated to `react-native-navigation-components`
-- this is still a work in progress, there's lots I'd like to have here, and I'm always open to ideas/help

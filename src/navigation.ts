@@ -2,8 +2,16 @@
 // https://github.com/reach/router/blob/master/src/lib/history.js
 
 export type Listener = (location: Location) => void;
-export type Navigate = (to: string, from: string, state?: Object) => void;
+export type Navigate = (
+  to: string,
+  from: string,
+  state?: Object,
+  options?: NavigateOptions
+) => void;
 export type Back = (amount: number) => void;
+export type NavigateOptions = {
+  latest?: boolean;
+};
 
 export interface Location {
   path: string;
@@ -19,7 +27,7 @@ export interface Navigation {
 
 function createNavigation(initial = '/'): Navigation {
   let paths: string[] = [initial];
-  let states: Object[] = [];
+  let states: Object[] = [{}];
 
   let index = 0;
   let listeners: Listener[] = [];
@@ -35,8 +43,8 @@ function createNavigation(initial = '/'): Navigation {
     navigate: function(
       to: string,
       from: string,
-      state?: Object
-      // options?: { latest?: boolean }
+      state?: Object,
+      options?: { latest?: boolean }
     ) {
       let next = resolve(to, from);
 
@@ -46,16 +54,17 @@ function createNavigation(initial = '/'): Navigation {
 
       index++;
 
-      // if (options && options.latest) {
-      //   if (history.includes(next)) {
-      //     for (let i = history.length - 1; i >= 0; i--) {
-      //       if (history[i].includes(next)) {
-      //         next = history[i].pathname;
-      //         break;
-      //       }
-      //     }
-      //   }
-      // }
+      if (options && options.latest) {
+        if (paths.includes(next)) {
+          for (let i = paths.length - 1; i >= 0; i--) {
+            const path = paths[i];
+            if (path.includes(next)) {
+              next = path;
+              break;
+            }
+          }
+        }
+      }
 
       if (!state) {
         state = {};

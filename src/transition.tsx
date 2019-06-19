@@ -1,7 +1,49 @@
 import React from 'react';
-import { StyleSheet, Animated } from 'react-native';
-
+import {
+  StyleSheet,
+  Animated,
+  StyleProp,
+  ViewStyle,
+  Platform,
+  // Easing,
+} from 'react-native';
 export type NavigatorType = 'stack' | 'tabs' | 'switch';
+
+export interface TransitionProps {
+  index: number;
+  activeIndex: number;
+  total: number;
+  children: any;
+  shouldRenderChild: boolean;
+  type?: NavigatorType;
+  pathname?: string;
+  style?: StyleProp<ViewStyle>;
+  state: Object;
+  interpolate?: TransitionInterpolate;
+  animation?: TransitionAnimation;
+  animated?: boolean;
+  onTransitionEnd?: () => void;
+}
+
+export type TransitionAnimation = (
+  value: Animated.Value,
+  index: number,
+  activeIndex: number
+) => any;
+
+export type TransitionInterpolate = (
+  value: Animated.Value,
+  args: AnimationArgs
+) => any;
+
+export interface AnimationArgs {
+  type?: NavigatorType;
+  width: number;
+  height: number;
+  index: number;
+  activeIndex: number;
+  total: number;
+}
 
 function getAnimatedValue(index: number, activeIndex: number) {
   const animatedValue =
@@ -10,43 +52,30 @@ function getAnimatedValue(index: number, activeIndex: number) {
   return animatedValue;
 }
 
-interface TransitionProps {
-  type: NavigatorType;
-  index: number;
-  activeIndex: number;
-  total: number;
-  children: any;
-  shouldRenderChild: boolean;
-  pathname: string;
-}
+const defaultAnimation = Platform.select({
+  default: (value: Animated.Value, index: number, activeIndex: number) =>
+    Animated.spring(value, {
+      stiffness: 1000,
+      damping: 500,
+      mass: 3,
+      overshootClamping: true,
+      restDisplacementThreshold: 0.01,
+      restSpeedThreshold: 0.01,
+      toValue: getAnimatedValue(index, activeIndex),
+      useNativeDriver: true,
+    }),
 
-class Transition extends React.Component<TransitionProps> {
-  static defaultProps = {
-    type: 'tabs',
-  };
+  // android: (value: Animated.Value, index: number, activeIndex: number) =>
+  //   Animated.timing(value, {
+  //     duration: index === activeIndex ? 350 : 150,
+  //     easing: Easing.in(Easing.linear),
+  //     toValue: getAnimatedValue(index, activeIndex),
+  //   }),
+});
 
-  anim = new Animated.Value(
-    getAnimatedValue(this.props.index, this.props.activeIndex)
-  );
-
-  animate = () => {
-    this.setState({ animating: true }, () => {
-      Animated.spring(this.anim, {
-        stiffness: 1000,
-        damping: 500,
-        mass: 3,
-        overshootClamping: true,
-        restDisplacementThreshold: 0.01,
-        restSpeedThreshold: 0.01,
-        toValue: getAnimatedValue(this.props.index, this.props.activeIndex),
-        useNativeDriver: true,
-      }).start(() => this.setState({ animating: false }));
-    });
-  };
-
-  animation(anim: any, type = 'tabs') {
-    const { width } = this.state;
-
+const defaultInterpolation = Platform.select({
+  default: (value: Animated.Value, args: AnimationArgs): any => {
+    const { width, type } = args;
     let offset = width + 5;
 
     const baseNegative = type === 'stack' ? 0 : -offset;
@@ -54,7 +83,7 @@ class Transition extends React.Component<TransitionProps> {
     return {
       transform: [
         {
-          translateX: anim.interpolate({
+          translateX: value.interpolate({
             inputRange: [-1, 0, 1],
             outputRange: [baseNegative, 0, offset],
             extrapolate: 'clamp',
@@ -62,12 +91,59 @@ class Transition extends React.Component<TransitionProps> {
         },
       ],
     };
-  }
+  },
+
+  // android: (value: Animated.Value, args: AnimationArgs): any => {
+  //   const { height } = args;
+  //   return {
+  //     opacity: value.interpolate({
+  //       inputRange: [-1, -0.9, -0.5, 0, 0.5, 0.9, 1],
+  //       outputRange: [0, 0.25, 0.7, 1, 0.7, 0.25, 0],
+  //       extrapolate: 'clamp',
+  //     }),
+  //     transform: [
+  //       {
+  //         translateY: value.interpolate({
+  //           inputRange: [-1, 0, 1],
+  //           outputRange: [height * 0.08, 0, height * 0.08],
+  //           extrapolate: 'clamp',
+  //         }),
+  //       },
+  //     ],
+  //   };
+  // },
+});
+class Transition extends React.Component<TransitionProps> {
+  static defaultProps = {
+    type: 'tabs',
+    animated: true,
+  };
 
   state = {
     animating: false,
     height: 0,
     width: 0,
+  };
+
+  anim = new Animated.Value(
+    getAnimatedValue(this.props.index, this.props.activeIndex)
+  );
+
+  animate = () => {
+    const { activeIndex, index, animated, onTransitionEnd } = this.props;
+
+    if (!animated) {
+      this.anim.setValue(getAnimatedValue(index, activeIndex));
+    } else {
+      this.setState({ animating: true }, () => {
+        const animation = this.props.animation || defaultAnimation;
+
+        animation(this.anim, index, activeIndex).start(() => {
+          this.setState({ animating: false });
+          onTransitionEnd && onTransitionEnd();
+        });
+      });
+    }
   };
 
   setSize = ({
@@ -82,12 +158,26 @@ class Transition extends React.Component<TransitionProps> {
   };
 
   componentDidMount() {
-    this.animate();
+    const { activeIndex, index } = this.props;
+    if (activeIndex === index) {
+      this.animate();
+    }
   }
 
   componentDidUpdate(prevProps: any) {
     if (prevProps.activeIndex !== this.props.activeIndex) {
-      this.animate();
+      // will become active or becoming inactive
+      if (
+        prevProps.activeIndex === this.props.index ||
+        this.props.activeIndex === this.props.index
+      ) {
+        this.animate();
+      } else {
+        // move screen w/o animation as its an intermediate screen
+        this.anim.setValue(
+          getAnimatedValue(this.props.index, this.props.activeIndex)
+        );
+      }
     }
   }
 
@@ -95,27 +185,39 @@ class Transition extends React.Component<TransitionProps> {
     const {
       children,
       activeIndex,
+      total,
       index,
       type,
       shouldRenderChild,
+      interpolate = defaultInterpolation,
+      style,
     } = this.props;
 
-    const animation = this.animation(this.anim, type);
-    const focused = activeIndex === index;
+    const { width, height } = this.state;
+
+    const animatedStyle = interpolate(this.anim, {
+      type,
+      width,
+      height,
+      index,
+      activeIndex,
+      total,
+    });
+
     const shouldUnmount = !shouldRenderChild && !this.state.animating;
 
     return (
       <Animated.View
         onLayout={this.setSize}
-        style={{
-          ...StyleSheet.absoluteFillObject,
-          ...animation,
-          overflow: 'hidden',
-        }}
+        style={[
+          style || StyleSheet.absoluteFillObject,
+          animatedStyle,
+          {
+            overflow: 'hidden',
+          },
+        ]}
       >
-        {shouldUnmount || !children
-          ? null
-          : React.cloneElement(children, { focused })}
+        {shouldUnmount || !children ? null : children}
       </Animated.View>
     );
   }

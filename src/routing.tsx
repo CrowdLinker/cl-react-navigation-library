@@ -1,7 +1,7 @@
 import React, { cloneElement, Children } from 'react';
-import { Navigation, createNavigation } from './navigation';
+import { Navigation, createNavigation, NavigateOptions } from './navigation';
 import { View, StyleProp, ViewStyle, TouchableOpacity } from 'react-native';
-import Transition, { NavigatorType } from './transition';
+import Transition, { NavigatorType, TransitionProps } from './transition';
 import { LocationBar } from './location-bar';
 
 export const NavigationContext = React.createContext<Navigation | undefined>(
@@ -84,6 +84,7 @@ interface NavigatorProps {
   children: any;
   style?: StyleProp<ViewStyle>;
   type?: NavigatorType;
+  transition?: Partial<TransitionProps>;
   initialPath?: string;
   showLocationBar?: boolean;
 }
@@ -101,7 +102,7 @@ export interface RouteProps<P = {}, S = {}> {
 // map navigation props to routes and parse focus index
 class Router extends React.Component<NavigatorProps & RouteProps> {
   render() {
-    const { style, children, type, ...rest } = this.props;
+    const { style, children, type, transition, ...rest } = this.props;
 
     return (
       <BasepathContext.Consumer>
@@ -122,7 +123,12 @@ class Router extends React.Component<NavigatorProps & RouteProps> {
 
               return (
                 <View style={style || { flex: 1 }}>
-                  <Routes matchingIndex={matchingIndex} type={type}>
+                  <Routes
+                    matchingIndex={matchingIndex}
+                    type={type}
+                    transition={transition}
+                    state={navigation.current.state}
+                  >
                     {routes}
                   </Routes>
                 </View>
@@ -139,6 +145,8 @@ interface RoutesProps {
   type?: NavigatorType;
   matchingIndex: number;
   children: any;
+  state: Object;
+  transition?: Partial<TransitionProps>;
 }
 
 interface RoutesState {
@@ -170,7 +178,13 @@ class Routes extends React.Component<RoutesProps, RoutesState> {
   }
 
   render() {
-    const { children, matchingIndex, type = 'tabs' } = this.props;
+    const {
+      children,
+      matchingIndex,
+      type = 'tabs',
+      transition,
+      state,
+    } = this.props;
     const { rendered } = this.state;
 
     const lastMatchingIndex = rendered[rendered.length - 1];
@@ -194,13 +208,40 @@ class Routes extends React.Component<RoutesProps, RoutesState> {
           activeIndex={activeIndex}
           pathname={element.props.pathname}
           shouldRenderChild={shouldRenderChild}
+          state={state}
+          {...transition}
         >
           <BasepathContext.Provider value={element.props.pathname}>
-            {element}
+            {!hasRendered && !shouldRenderChild ? null : (
+              <CacheState focused={index === activeIndex} state={state}>
+                {element}
+              </CacheState>
+            )}
           </BasepathContext.Provider>
         </Transition>
       );
     });
+  }
+}
+
+interface CacheStateProps {
+  children: React.ReactElement<any>;
+  state: Object;
+  focused: boolean;
+}
+
+class CacheState extends React.Component<CacheStateProps> {
+  state = this.props.state;
+
+  componentDidUpdate(prevProps: CacheStateProps) {
+    if (!prevProps.focused && this.props.focused) {
+      this.setState(this.props.state);
+    }
+  }
+
+  render() {
+    const { children, focused } = this.props;
+    return cloneElement(children, { ...this.state, focused });
   }
 }
 
@@ -209,16 +250,17 @@ interface LinkProps {
   state?: Object;
   children: any;
   style?: StyleProp<ViewStyle>;
+  options?: NavigateOptions;
 }
 
-function Link({ to, state, children, style }: LinkProps) {
+function Link({ to, state, children, style, options }: LinkProps) {
   return (
     <NavigationContext.Consumer>
       {navigation => (
         <BasepathContext.Consumer>
           {(basepath = '/') => {
             function navigate() {
-              navigation && navigation.navigate(to, basepath, state);
+              navigation && navigation.navigate(to, basepath, state, options);
             }
 
             return (
@@ -233,7 +275,55 @@ function Link({ to, state, children, style }: LinkProps) {
   );
 }
 
-export { Router, Link };
+// interface ParamsProps {
+//   path: string;
+//   children: ({ params }: { params?: any }) => React.ReactNode;
+// }
+
+// function Params({ path, children }: ParamsProps) {
+//   return (
+//     <NavigationProvider>
+//       {navigation => (
+//         <BasepathContext.Consumer>
+//           {basepath => {
+//             const pathname = getPathname(path, basepath);
+//             const params = getParams(pathname, navigation.current.path);
+
+//             return children({ params });
+//           }}
+//         </BasepathContext.Consumer>
+//       )}
+//     </NavigationProvider>
+//   );
+// }
+
+interface MatchProps {
+  path: string;
+  children: (props: { match: boolean; params?: any }) => any;
+  exact?: boolean;
+}
+
+function Route({ path, children, exact }: MatchProps) {
+  return (
+    <NavigationProvider>
+      {navigation => (
+        <BasepathContext.Consumer>
+          {basepath => {
+            const pathname = getPathname(path, basepath);
+            const params = getParams(pathname, navigation.current.path);
+
+            return children({
+              params,
+              match: match(pathname, navigation.current.path, { exact }),
+            });
+          }}
+        </BasepathContext.Consumer>
+      )}
+    </NavigationProvider>
+  );
+}
+
+export { Router, Link, Route };
 
 interface Route extends Navigation {
   pathname: string;
@@ -260,11 +350,7 @@ function createRoutes(
       clone = cloneElement(element, route);
     }
 
-    if (
-      match(route.pathname, navigation.current.path, {
-        exact: false,
-      })
-    ) {
+    if (match(route.pathname, navigation.current.path, { exact: false })) {
       if (!route.initialRoute) {
         activeIndex = index;
       } else {
@@ -373,6 +459,10 @@ function match(pathname: string, location: string, { exact = false }): boolean {
 
   if (exact && pathSegments.length !== locationSegments.length) {
     return false;
+  }
+
+  if (pathname === '/') {
+    return true;
   }
 
   let match = true;

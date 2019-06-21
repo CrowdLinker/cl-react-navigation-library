@@ -16,9 +16,9 @@ class Header extends React.Component<HeaderProps> {
 
     return (
       <Route path={path} exact={exact}>
-        {({ params }) => {
-          const clone = cloneElement(children, { params });
-          return <View style={style || styles.header}>{clone}</View>;
+        {({ params, match }) => {
+          const clone = cloneElement(children, { params, match });
+          return <View style={[styles.header, style]}>{clone}</View>;
         }}
       </Route>
     );
@@ -33,11 +33,7 @@ interface TabbarProps {
 function Tabbar({ children, style }: TabbarProps) {
   return (
     <Route path=":active">
-      {({ params, match }) => {
-        if (!match) {
-          return null;
-        }
-
+      {({ params }) => {
         const active = params ? params.active : '';
 
         return (
@@ -62,33 +58,37 @@ function Tabbar({ children, style }: TabbarProps) {
   );
 }
 
+// ref: https://github.com/react-navigation/stack/blob/master/src/views/Header/Header.tsx
 const APPBAR_HEIGHT = Platform.select({
   ios: 44,
   android: 56,
   default: 64,
 });
 
-const STATUSBAR_HEIGHT = getStatusBarHeight(true);
+const STATUSBAR_HEIGHT = getStatusBarHeight();
 const BOTTOM_SPACE = getBottomSpace();
 const TABBAR_HEIGHT = 49;
+
+const platformContainerStyles = Platform.select({
+  android: {
+    elevation: 4,
+  },
+  ios: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#A7A7AA',
+  },
+  default: {
+    // https://github.com/necolas/react-native-web/issues/44
+    // Material Design
+    boxShadow: `0 2px 4px -1px rgba(0,0,0,0.2), 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12)`,
+  },
+});
 
 const styles = StyleSheet.create({
   header: {
     paddingTop: STATUSBAR_HEIGHT,
     height: APPBAR_HEIGHT + STATUSBAR_HEIGHT,
-    ...Platform.select({
-      web: {
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: '#A7A7AA',
-      },
-      ios: {
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: '#A7A7AA',
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    ...platformContainerStyles,
   },
 
   tabbar: {

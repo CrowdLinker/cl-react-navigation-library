@@ -23,6 +23,7 @@ export interface Navigation {
   navigate: Navigate;
   listen: (listener: Listener) => () => void;
   back: Back;
+  index: number;
 }
 
 function createNavigation(initial = '/'): Navigation {
@@ -33,6 +34,10 @@ function createNavigation(initial = '/'): Navigation {
   let listeners: Listener[] = [];
 
   return {
+    get index() {
+      return index;
+    },
+
     get current() {
       return {
         path: paths[index],

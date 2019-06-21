@@ -1,6 +1,13 @@
 import React, { cloneElement, Children } from 'react';
 import { Navigation, createNavigation, NavigateOptions } from './navigation';
-import { View, StyleProp, ViewStyle, TouchableOpacity } from 'react-native';
+import {
+  StyleProp,
+  ViewStyle,
+  TouchableOpacity,
+  BackHandler,
+  View,
+} from 'react-native';
+import PanHandler from './pan-handler';
 import Transition, { NavigatorType, TransitionProps } from './transition';
 import { LocationBar } from './location-bar';
 
@@ -21,11 +28,13 @@ class NavigationProviderImpl extends React.Component<
 > {
   unlisten: () => void;
   mounted: boolean;
+  navigation: Navigation;
 
   constructor(props: any) {
     super(props);
 
     const navigation = createNavigation(props.initialPath);
+    this.navigation = navigation;
 
     this.unlisten = () => {};
     this.mounted = false;
@@ -41,12 +50,36 @@ class NavigationProviderImpl extends React.Component<
         this.setState({ current: location });
       }
     });
+
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
   }
 
   componentWillUnmount() {
     this.mounted = false;
     this.unlisten();
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackPress);
   }
+
+  componentDidUpdate(prevProps: NavigationProps) {
+    const {
+      navigate,
+      current: { path },
+    } = this.state;
+    const { initialPath } = this.props;
+
+    if (prevProps.initialPath !== initialPath && initialPath) {
+      navigate(initialPath, path);
+    }
+  }
+
+  handleBackPress = () => {
+    if (this.navigation.index !== 0) {
+      this.state.back(1);
+      return true;
+    }
+
+    return false;
+  };
 
   render() {
     const { children, showLocationBar } = this.props;
@@ -87,6 +120,7 @@ interface NavigatorProps {
   transition?: Partial<TransitionProps>;
   initialPath?: string;
   showLocationBar?: boolean;
+  panEnabled?: boolean;
 }
 
 export interface RouteProps<P = {}, S = {}> {
@@ -102,7 +136,14 @@ export interface RouteProps<P = {}, S = {}> {
 // map navigation props to routes and parse focus index
 class Router extends React.Component<NavigatorProps & RouteProps> {
   render() {
-    const { style, children, type, transition, ...rest } = this.props;
+    const {
+      style,
+      children,
+      type = 'tabs',
+      transition,
+      panEnabled,
+      ...rest
+    } = this.props;
 
     return (
       <BasepathContext.Consumer>
@@ -124,10 +165,12 @@ class Router extends React.Component<NavigatorProps & RouteProps> {
               return (
                 <View style={style || { flex: 1 }}>
                   <Routes
+                    navigation={navigation}
                     matchingIndex={matchingIndex}
                     type={type}
                     transition={transition}
                     state={navigation.current.state}
+                    panEnabled={panEnabled}
                   >
                     {routes}
                   </Routes>
@@ -146,6 +189,8 @@ interface RoutesProps {
   matchingIndex: number;
   children: any;
   state: Object;
+  panEnabled?: boolean;
+  navigation: Navigation;
   transition?: Partial<TransitionProps>;
 }
 
@@ -177,6 +222,54 @@ class Routes extends React.Component<RoutesProps, RoutesState> {
     }
   }
 
+  handleSwipe = (direction: 'left' | 'right') => {
+    const { children: routes, navigation, type } = this.props;
+
+    const activeIndex = this.getActiveIndex();
+    const current = routes[activeIndex];
+
+    if (current) {
+      if (direction === 'right') {
+        const right = routes[activeIndex + 1];
+
+        if (right) {
+          navigation.navigate(
+            right.props.pathname,
+            current.props.pathname,
+            {},
+            { latest: true }
+          );
+        }
+      }
+
+      if (direction === 'left') {
+        const left = routes[activeIndex - 1];
+
+        // only tabs should swipe left w/ latest route
+        // stack will just find the same route its already on
+        if (left) {
+          navigation.navigate(
+            left.props.pathname,
+            current.props.pathname,
+            {},
+            { latest: type === 'tabs' }
+          );
+        }
+      }
+    }
+  };
+
+  getActiveIndex = () => {
+    const { rendered } = this.state;
+    const { matchingIndex } = this.props;
+
+    const lastMatchingIndex = rendered[rendered.length - 1];
+    const activeIndex =
+      matchingIndex === -1 ? lastMatchingIndex : matchingIndex;
+
+    return activeIndex;
+  };
+
   render() {
     const {
       children,
@@ -184,43 +277,61 @@ class Routes extends React.Component<RoutesProps, RoutesState> {
       type = 'tabs',
       transition,
       state,
+      panEnabled = false,
     } = this.props;
     const { rendered } = this.state;
 
-    const lastMatchingIndex = rendered[rendered.length - 1];
+    const activeIndex = this.getActiveIndex();
 
-    return Children.map(children, (element: any, index) => {
-      const hasRendered = rendered.includes(index);
-      const isFocused = index === matchingIndex;
-      const isBelowInStack = type === 'stack' && index < matchingIndex;
-      const keepAlive = !element.props.unmountOnExit && hasRendered;
+    const isFirstStackScreen = type === 'stack' && activeIndex === 0;
 
-      // transition won't unmount components until exit animations finish
-      const shouldRenderChild = isFocused || isBelowInStack || keepAlive;
-      const activeIndex =
-        matchingIndex === -1 ? lastMatchingIndex : matchingIndex;
+    return (
+      <PanHandler
+        transition={this.handleSwipe}
+        enabled={panEnabled ? !isFirstStackScreen : false}
+      >
+        {({ panValue, transitioning }: any) =>
+          Children.map(children, (element: any, index) => {
+            const hasRendered = rendered.includes(index);
+            const isFocused = index === matchingIndex;
+            const isBelowInStack = type === 'stack' && index < matchingIndex;
+            const keepAlive = !element.props.unmountOnExit && hasRendered;
+            const isAdjacentInPan =
+              type === 'tabs' &&
+              panEnabled &&
+              Math.abs(index - activeIndex) === 1 &&
+              hasRendered;
 
-      return (
-        <Transition
-          type={type}
-          index={index}
-          total={children.length}
-          activeIndex={activeIndex}
-          pathname={element.props.pathname}
-          shouldRenderChild={shouldRenderChild}
-          state={state}
-          {...transition}
-        >
-          <BasepathContext.Provider value={element.props.pathname}>
-            {!hasRendered && !shouldRenderChild ? null : (
-              <CacheState focused={index === activeIndex} state={state}>
-                {element}
-              </CacheState>
-            )}
-          </BasepathContext.Provider>
-        </Transition>
-      );
-    });
+            // transition won't unmount components until exit animations finish
+            const shouldRenderChild =
+              isFocused || isBelowInStack || keepAlive || isAdjacentInPan;
+
+            return (
+              <Transition
+                type={type}
+                index={index}
+                total={children.length}
+                activeIndex={activeIndex}
+                pathname={element.props.pathname}
+                shouldRenderChild={shouldRenderChild}
+                state={state}
+                panValue={panValue}
+                panning={transitioning}
+                {...transition}
+              >
+                <BasepathContext.Provider value={element.props.pathname}>
+                  {!hasRendered && !shouldRenderChild ? null : (
+                    <CacheState focused={index === activeIndex} state={state}>
+                      {element}
+                    </CacheState>
+                  )}
+                </BasepathContext.Provider>
+              </Transition>
+            );
+          })
+        }
+      </PanHandler>
+    );
   }
 }
 
@@ -251,6 +362,7 @@ interface LinkProps {
   children: any;
   style?: StyleProp<ViewStyle>;
   options?: NavigateOptions;
+  component?: any;
 }
 
 function Link({ to, state, children, style, options }: LinkProps) {
@@ -260,7 +372,10 @@ function Link({ to, state, children, style, options }: LinkProps) {
         <BasepathContext.Consumer>
           {(basepath = '/') => {
             function navigate() {
-              navigation && navigation.navigate(to, basepath, state, options);
+              // this might help with performance -- not sure
+              requestAnimationFrame(() => {
+                navigation && navigation.navigate(to, basepath, state, options);
+              });
             }
 
             return (

@@ -7,6 +7,7 @@ import {
   Platform,
   // Easing,
 } from 'react-native';
+
 export type NavigatorType = 'stack' | 'tabs' | 'switch';
 
 export interface TransitionProps {
@@ -15,132 +16,152 @@ export interface TransitionProps {
   total: number;
   children: any;
   shouldRenderChild: boolean;
-  type?: NavigatorType;
+  type: NavigatorType;
   pathname?: string;
   style?: StyleProp<ViewStyle>;
   state: Object;
-  interpolate?: TransitionInterpolate;
-  animation?: TransitionAnimation;
+  interpolate: TransitionInterpolate;
+  animation: TransitionAnimation;
   animated?: boolean;
-  onTransitionEnd?: () => void;
+  panValue: Animated.Value;
+  panning?: boolean;
 }
 
 export type TransitionAnimation = (
   value: Animated.Value,
-  index: number,
-  activeIndex: number
+  toValue: number
 ) => any;
 
 export type TransitionInterpolate = (
-  value: Animated.Value,
+  value: Animated.AnimatedAddition,
   args: AnimationArgs
 ) => any;
 
 export interface AnimationArgs {
-  type?: NavigatorType;
+  type: NavigatorType;
   width: number;
   height: number;
-  index: number;
-  activeIndex: number;
-  total: number;
 }
 
 function getAnimatedValue(index: number, activeIndex: number) {
-  const animatedValue =
-    index < activeIndex ? -1 : index === activeIndex ? 0 : 1;
+  if (index < activeIndex) {
+    const offset = index - activeIndex;
+    return Math.max(offset, -2);
+  }
 
-  return animatedValue;
+  if (index > activeIndex) {
+    const offset = index - activeIndex;
+    return Math.min(offset, 2);
+  }
+
+  return 0;
 }
 
-const defaultAnimation = Platform.select({
-  default: (value: Animated.Value, index: number, activeIndex: number) =>
-    Animated.spring(value, {
-      stiffness: 1000,
-      damping: 500,
-      mass: 3,
-      overshootClamping: true,
-      restDisplacementThreshold: 0.01,
-      restSpeedThreshold: 0.01,
-      toValue: getAnimatedValue(index, activeIndex),
-      useNativeDriver: true,
-    }),
+function spring(value: Animated.Value, toValue: number) {
+  return Animated.spring(value, {
+    stiffness: 1000,
+    damping: 500,
+    mass: 3,
+    overshootClamping: true,
+    restDisplacementThreshold: 0.01,
+    restSpeedThreshold: 0.01,
+    toValue: toValue,
+    useNativeDriver: true,
+  });
+}
 
-  // android: (value: Animated.Value, index: number, activeIndex: number) =>
-  //   Animated.timing(value, {
-  //     duration: index === activeIndex ? 350 : 150,
-  //     easing: Easing.in(Easing.linear),
-  //     toValue: getAnimatedValue(index, activeIndex),
-  //   }),
+// function timing(value: Animated.Value, toValue: number) {
+//   return Animated.timing(value, {
+//     duration: toValue === 0 ? 150 : 350,
+//     easing:
+//       toValue === 0 ? Easing.in(Easing.linear) : Easing.out(Easing.poly(5)),
+//     toValue: toValue,
+//     useNativeDriver: true,
+//   });
+// }
+
+const animation = Platform.select({
+  default: spring,
+  // android: timing,
 });
 
-const defaultInterpolation = Platform.select({
-  default: (value: Animated.Value, args: AnimationArgs): any => {
+function horizontal(
+  value: Animated.AnimatedAddition,
+  width: number,
+  type: NavigatorType
+) {
+  let offset = width + 5;
+  const baseNegative = type === 'stack' ? 0 : -offset;
+
+  return {
+    transform: [
+      {
+        translateX: value.interpolate({
+          inputRange: [-2, -1, 0, 1, 2],
+          outputRange: [baseNegative * 2, baseNegative, 0, offset, offset * 2],
+          extrapolate: 'clamp',
+        }),
+      },
+    ],
+  };
+}
+
+// function vertical(value: Animated.Value, height: number) {
+//   return {
+//     transform: [
+//       {
+//         translateY: value.interpolate({
+//           inputRange: [-1, 0, 1],
+//           outputRange: [0, 0, height],
+//         }),
+//       },
+//     ],
+//   };
+// }
+
+const interpolate = Platform.select({
+  default: (value: Animated.AnimatedAddition, args: AnimationArgs): any => {
     const { width, type } = args;
-    let offset = width + 5;
-
-    const baseNegative = type === 'stack' ? 0 : -offset;
-
-    return {
-      transform: [
-        {
-          translateX: value.interpolate({
-            inputRange: [-1, 0, 1],
-            outputRange: [baseNegative, 0, offset],
-            extrapolate: 'clamp',
-          }),
-        },
-      ],
-    };
+    return horizontal(value, width, type);
   },
 
   // android: (value: Animated.Value, args: AnimationArgs): any => {
-  //   const { height } = args;
-  //   return {
-  //     opacity: value.interpolate({
-  //       inputRange: [-1, -0.9, -0.5, 0, 0.5, 0.9, 1],
-  //       outputRange: [0, 0.25, 0.7, 1, 0.7, 0.25, 0],
-  //       extrapolate: 'clamp',
-  //     }),
-  //     transform: [
-  //       {
-  //         translateY: value.interpolate({
-  //           inputRange: [-1, 0, 1],
-  //           outputRange: [height * 0.08, 0, height * 0.08],
-  //           extrapolate: 'clamp',
-  //         }),
-  //       },
-  //     ],
-  //   };
+  //   const { height, width, type } = args;
+  //   if (type === 'stack') {
+  //     return vertical(value, height);
+  //   }
+
+  //   return horizontal(value, width, type);
   // },
 });
 class Transition extends React.Component<TransitionProps> {
   static defaultProps = {
     type: 'tabs',
     animated: true,
+    animation: animation,
+    interpolate: interpolate,
   };
 
   state = {
     animating: false,
     height: 0,
     width: 0,
+    panDisabled: false,
   };
 
   anim = new Animated.Value(
     getAnimatedValue(this.props.index, this.props.activeIndex)
   );
 
-  animate = () => {
-    const { activeIndex, index, animated, onTransitionEnd } = this.props;
+  animate = (toValue: number) => {
+    const { animated, animation } = this.props;
 
     if (!animated) {
-      this.anim.setValue(getAnimatedValue(index, activeIndex));
+      this.anim.setValue(toValue);
     } else {
       this.setState({ animating: true }, () => {
-        const animation = this.props.animation || defaultAnimation;
-
-        animation(this.anim, index, activeIndex).start(() => {
+        animation(this.anim, toValue).start(() => {
           this.setState({ animating: false });
-          onTransitionEnd && onTransitionEnd();
         });
       });
     }
@@ -157,51 +178,49 @@ class Transition extends React.Component<TransitionProps> {
     });
   };
 
-  componentDidMount() {
-    const { activeIndex, index } = this.props;
-    if (activeIndex === index) {
-      this.animate();
-    }
-  }
+  componentDidUpdate(prevProps: TransitionProps) {
+    const { index, activeIndex } = this.props;
+    const toValue = getAnimatedValue(index, activeIndex);
+    const offset = Math.abs(toValue);
 
-  componentDidUpdate(prevProps: any) {
     if (prevProps.activeIndex !== this.props.activeIndex) {
+      // screen is not adjacent so we dont want panValue to update its position
+      if (offset === 2) {
+        this.setState({ panDisabled: true });
+      }
+
       // will become active or becoming inactive
-      if (
-        prevProps.activeIndex === this.props.index ||
-        this.props.activeIndex === this.props.index
-      ) {
-        this.animate();
+      if (prevProps.activeIndex === index || activeIndex === index) {
+        this.animate(toValue);
       } else {
         // move screen w/o animation as its an intermediate screen
-        this.anim.setValue(
-          getAnimatedValue(this.props.index, this.props.activeIndex)
-        );
+        this.anim.setValue(toValue);
       }
+    }
+
+    // screen is now adjacent and pan animation finished -- screen should respond to panValue
+    if (this.state.panDisabled && offset < 2 && !this.props.panning) {
+      this.setState({ panDisabled: false });
     }
   }
 
   render() {
-    const {
+    let {
       children,
-      activeIndex,
-      total,
-      index,
       type,
       shouldRenderChild,
-      interpolate = defaultInterpolation,
+      interpolate,
       style,
+      panValue,
     } = this.props;
 
-    const { width, height } = this.state;
+    const { width, height, panDisabled } = this.state;
+    const animatedValue = Animated.add(panDisabled ? 0 : panValue, this.anim);
 
-    const animatedStyle = interpolate(this.anim, {
+    const animatedStyle = interpolate(animatedValue, {
       type,
       width,
       height,
-      index,
-      activeIndex,
-      total,
     });
 
     const shouldUnmount = !shouldRenderChild && !this.state.animating;
@@ -224,65 +243,3 @@ class Transition extends React.Component<TransitionProps> {
 }
 
 export default Transition;
-
-// interface PanHandlerProps {
-//   type: RouterType;
-//   focusIndex: number;
-//   total: number;
-//   transition: (amount: number) => void;
-//   children: any;
-// }
-// class PanHandler extends React.Component<PanHandlerProps> {
-//   anim = new Animated.Value(0);
-
-//   state = {
-//     transitioning: false,
-//   };
-
-//   animate = (value: number) => {
-//     this.setState({ transitioning: true });
-//     Animated.spring(this.anim, {
-//       stiffness: 1000,
-//       damping: 500,
-//       mass: 3,
-//       overshootClamping: true,
-//       restDisplacementThreshold: 0.01,
-//       restSpeedThreshold: 0.01,
-//       toValue: value,
-//       useNativeDriver: true,
-//     }).start(() => this.setState({ transitioning: false }));
-//   };
-
-//   panResponder = PanResponder.create({
-//     onMoveShouldSetPanResponder: () => true,
-//     onPanResponderMove: (_, gestureState) => {
-//       this.anim.setValue(gestureState.dx / width);
-//     },
-//     onPanResponderTerminationRequest: () => false,
-//     onPanResponderRelease: (_, gestureState) => {
-//       const dx = Math.floor(gestureState.dx)
-
-//       const isSwipeRight = dx >= width / 2
-//       const isSwipeLeft = dx <= -width / 2
-
-//       if (isSwipeRight) {
-//         this.props.transition(this.props.focusIndex - 1);
-//       }
-
-//       if (isSwipeLeft) {
-//         this.props.transition(this.props.focusIndex + 1);
-//       }
-
-//       this.animate(0);
-//     },
-//   });
-
-//   render() {
-//     const { children } = this.props;
-
-//     return children({
-//       anim: this.anim,
-//       panHandlers: this.panResponder.panHandlers,
-//     });
-//   }
-// }

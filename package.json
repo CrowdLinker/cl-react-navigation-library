@@ -1,6 +1,6 @@
 {
   "name": "react-navigation-library",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "navigation library for react native",
   "main": "dist/index.js",
   "umd:main": "dist/react-navigation-library.umd.production.js",

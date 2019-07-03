@@ -1,0 +1,46 @@
+<Navigator>
+  -- set basepath context and navigate() to tab children 
+  -- pass activeIndex to tabs + other components
+  -- render prop maybe?
+
+  e.g. {({ match }) =>  null } -- can control which components are unmounted this way?
+
+  <Headers>
+    -- renders matching index only
+    -- include dx from pager via context?
+    <Header>1</Header>
+    <Header>2</Header>
+    <Header>3</Header>
+  </Headers>
+
+  <Tabs>
+    -- runs match fn for navigator 
+    -- pager w/ screens 
+    <Screen path='1' />
+    <Screen path='2' />
+    <Screen path='3' />
+    
+  </Tabs>
+
+  <Tabbar>
+    -- active tab mapped to matching screens (should take path?)
+    -- has access to dx from pager via context, requires a container like navigator to register dx
+    <Tab>1</Tab>
+    <Tab>2</Tab>
+    <Tab>3</Tab>
+  </Tabbar>
+
+</Navigator>
+
+-- screens should be compatible w/ react-native-screens (e.g use active prop) in case we need it
+-- fix typings so its clear when children are incorrect
+-- control ability to unmount components at the path level, ability to mount adjacent tabs -- optimistic mode?
+-- add switch navigator -- or the ability to unmount at the screen level
+-- finding most recent match w/ tabs as default behaviour -- optional?
+-- route component for dynamic matches (e.g a header) -- or match component with a path as a prop 
+-- relative links in a navigator should be more intuitive 
+-- shouldn't animate to initial route, just directly set offset values, same goes for intermediate screens
+-- navigation consumer component to set screens and whatnot -- repeated code in tabs / stack
+-- shared pager component 
+-- stack animation bug
+-- control mounting -- render ajacent, last match if unmounting / -1

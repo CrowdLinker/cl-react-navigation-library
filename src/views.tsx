@@ -1,60 +1,77 @@
 import React, { Children, cloneElement } from 'react';
 import { View, StyleSheet, Platform, ViewStyle, StyleProp } from 'react-native';
-import { Route, Link } from './routing';
+import { NavigationContext } from './navigation-provider';
 import { getStatusBarHeight, getBottomSpace } from './iphone-x-helpers';
+import { NavigatorContext } from './navigator';
+import { Link } from './link';
+
+interface HeadersProps {
+  activeIndex: number;
+  children: any;
+}
+
+function HeadersImpl({ activeIndex, children }: HeadersProps) {
+  if (!children[activeIndex]) {
+    return null;
+  }
+
+  return children[activeIndex];
+}
+
+function Headers({ children }: { children: any }) {
+  return (
+    <NavigatorContext.Consumer>
+      {({ activeIndex }) => (
+        <HeadersImpl activeIndex={activeIndex}>{children}</HeadersImpl>
+      )}
+    </NavigatorContext.Consumer>
+  );
+}
 
 interface HeaderProps {
   children: any;
   style?: StyleProp<ViewStyle>;
-  path: string;
-  exact?: boolean;
 }
 
-class Header extends React.Component<HeaderProps> {
-  render() {
-    const { path, children, exact, style } = this.props;
-
-    return (
-      <Route path={path} exact={exact}>
-        {({ params, match }) => {
-          const clone = cloneElement(children, { params, match });
-          return <View style={[styles.header, style]}>{clone}</View>;
-        }}
-      </Route>
-    );
-  }
-}
-
-interface TabbarProps {
-  style?: StyleProp<ViewStyle>;
-  children: any;
-}
-
-function Tabbar({ children, style }: TabbarProps) {
+function Header({ children, style }: HeaderProps) {
   return (
-    <Route path=":active">
-      {({ params }) => {
-        const active = params ? params.active : '';
+    <NavigationContext.Consumer>
+      {navigation => (
+        <View style={[styles.header, style]}>
+          {cloneElement(children, navigation)}
+        </View>
+      )}
+    </NavigationContext.Consumer>
+  );
+}
 
-        return (
-          <View style={style || styles.tabbar}>
-            {Children.map(children, (element: any) => {
-              return (
-                <Link
-                  to={`../${element.props.for}`}
-                  style={{ flex: 1 }}
-                  options={{ latest: true }}
-                >
-                  {cloneElement(element, {
-                    active: active === element.props.for,
-                  })}
-                </Link>
-              );
-            })}
-          </View>
-        );
-      }}
-    </Route>
+function TabbarImpl({ activeIndex, style, children }: any) {
+  return (
+    <View style={[style, styles.tabbar]}>
+      {Children.map(children, (element: any, index: number) =>
+        cloneElement(element, { active: index === activeIndex })
+      )}
+    </View>
+  );
+}
+
+function Tabbar({ children, ...rest }: HeaderProps) {
+  return (
+    <NavigatorContext.Consumer>
+      {({ activeIndex }) => (
+        <TabbarImpl activeIndex={activeIndex} {...rest}>
+          {children}
+        </TabbarImpl>
+      )}
+    </NavigatorContext.Consumer>
+  );
+}
+
+function Tab({ to, children, active, style }: any) {
+  return (
+    <Link to={to} style={[style, styles.tab]}>
+      {cloneElement(children, { active })}
+    </Link>
   );
 }
 
@@ -94,11 +111,14 @@ const styles = StyleSheet.create({
   tabbar: {
     height: TABBAR_HEIGHT + BOTTOM_SPACE,
     flexDirection: 'row',
-    alignItems: 'center',
     paddingBottom: BOTTOM_SPACE,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(0, 0, 0, .3)',
   },
+
+  tab: {
+    flex: 1,
+  },
 });
 
-export { Tabbar, Header };
+export { Header, Headers, Tabbar, Tab };

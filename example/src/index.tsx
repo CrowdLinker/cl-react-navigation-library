@@ -1,5 +1,5 @@
 // app entry
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AppRegistry,
   Platform,
@@ -7,88 +7,163 @@ import {
   Text,
   ViewStyle,
   StyleProp,
+  Button,
 } from 'react-native';
-import { Router, Link, RouteProps } from 'react-navigation-library';
+import {
+  Link,
+  Navigator,
+  Tabs,
+  Pager,
+  Stack,
+  Tabbar,
+  Tab,
+} from 'react-navigation-library';
 
-function App() {
+import { FlatList, BorderlessButton } from 'react-native-gesture-handler';
+
+function PagerApp() {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  function handleChange(index: number) {
+    setActiveIndex(index);
+  }
+
   return (
     <AppContainer>
-      <Router type="tabs" showLocationBar initialPath="/">
-        <Login path="login" />
-        <MyScreen initialRoute title="Home">
-          <MyLink to="login">Login</MyLink>
-          <MyLink to="signup">Signup</MyLink>
-        </MyScreen>
-        <Signup path="signup" />
-        <MyScreen path="app" title="Welcome to the app!" />
-      </Router>
+      <Pager index={activeIndex} onChange={handleChange}>
+        <Screen style={{ backgroundColor: 'aquamarine' }}>
+          <Text>0</Text>
+          <BorderlessButton onPress={() => setActiveIndex(activeIndex + 1)}>
+            <Text>Next</Text>
+          </BorderlessButton>
+        </Screen>
+        <Screen style={{ backgroundColor: 'orange' }}>
+          <Text>1</Text>
+          <BorderlessButton onPress={() => setActiveIndex(activeIndex + 1)}>
+            <Text>Next</Text>
+          </BorderlessButton>
+        </Screen>
+        <Screen style={{ backgroundColor: 'yellow' }}>
+          <Text>2</Text>
+          <BorderlessButton onPress={() => setActiveIndex(activeIndex + 1)}>
+            <Text>Next</Text>
+          </BorderlessButton>
+        </Screen>
+        <Screen style={{ backgroundColor: 'green' }}>
+          <Text>3</Text>
+        </Screen>
+        <Screen style={{ backgroundColor: 'purple' }}>
+          <Text>4</Text>
+        </Screen>
+      </Pager>
+
+      <View style={{ height: 50, width: '100%' }}>
+        <Button title="Inc" onPress={() => setActiveIndex(activeIndex + 1)} />
+        <Button title="Dec" onPress={() => setActiveIndex(activeIndex - 1)} />
+      </View>
     </AppContainer>
   );
 }
 
-type Param = {
-  id: string;
-};
+function Screen({ children, style }) {
+  return <View style={[styles.container, style]}>{children}</View>;
+}
 
-function Onboarding({ children, state }: RouteProps<{}, Param>) {
+function ProfileStack({}) {
   return (
-    <Router type="stack">
-      <MyScreen path="1" title="Onboarding 1" linkTo="../2" />
-      <MyScreen path="2" title="Onboarding 2" linkTo="../3" />
-      <MyScreen path="3" title="Onboarding 3" linkTo="/app" />
-    </Router>
+    <Navigator>
+      <Stack>
+        <Screen style={{ backgroundColor: 'blue' }} path="/">
+          <Text>1</Text>
+          <Link to="two">
+            <Text>Two</Text>
+          </Link>
+        </Screen>
+        <Screen style={{ backgroundColor: 'red' }} path="two">
+          <Text>2</Text>
+          <Link to="../three">
+            <Text>Three</Text>
+          </Link>
+        </Screen>
+        <Screen style={{ backgroundColor: 'green' }} path="three">
+          <Text>3</Text>
+        </Screen>
+      </Stack>
+    </Navigator>
   );
 }
 
-function Signup({ children }: any) {
+function App() {
   return (
-    <Router type="tabs">
-      <MyScreen initialRoute title="Signup" linkTo="onboarding/1" />
-      <Onboarding path="onboarding" />
-    </Router>
+    <AppContainer>
+      <Navigator name="main-tabs" showLocationBar initialPath="/home">
+        <Tabs>
+          <Feed name="Home" path="home" />
+          <Feed name="News" path="news" />
+          <Feed name="Popular" path="popular" />
+        </Tabs>
+
+        <Tabbar>
+          <View style={{ flex: 1 }}>
+            <Tab to="home">
+              <Text>Home</Text>
+            </Tab>
+          </View>
+          <Tab to="news">
+            <Text>News</Text>
+          </Tab>
+          <Tab to="popular">
+            <Text>Popular</Text>
+          </Tab>
+        </Tabbar>
+      </Navigator>
+    </AppContainer>
   );
 }
 
-function Login({ children }: any) {
+const items = Array.from({ length: 15 }).map((v, i) => {
+  return {
+    id: i,
+    text: `Item: ${i}`,
+  };
+});
+
+function Feed({ name }: any) {
   return (
-    <Router type="tabs">
-      <MyScreen path="reset-password" title="Reset Password" linkTo="/app" />
-
-      <MyScreen
-        path="forgot-password"
-        title="Forgot password?"
-        linkTo="../reset-password"
-      />
-
-      <MyScreen initialRoute title="Login">
-        <MyLink to="forgot-password">Forgot password?</MyLink>
-      </MyScreen>
-    </Router>
+    <Navigator name={name}>
+      <Stack>
+        <List items={items} />
+        <Profile path="/profile/:id" />
+      </Stack>
+    </Navigator>
   );
 }
 
-function MyLink({ children, to }: any) {
+function List({ items }) {
   return (
-    <Link to={to} style={{ padding: 10, borderWidth: 1, marginVertical: 10 }}>
-      <Text>{children}</Text>
+    <FlatList
+      style={{ flex: 1, padding: 10 }}
+      contentContainerStyle={{ paddingVertical: 20 }}
+      data={items}
+      renderItem={Card}
+      keyExtractor={item => `${item.id}`}
+    />
+  );
+}
+
+function Card({ item }) {
+  return (
+    <Link to={`profile/${item.id}`} style={styles.card} state={{ item }}>
+      <Text>{`Card: ${item.id}`}</Text>
     </Link>
   );
 }
 
-function MyScreen({ title, color, linkTo, children }: any) {
+function Profile({ item = {} }) {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: color || 'aquamarine',
-      }}
-    >
-      <Text style={{ marginBottom: 20 }}>{title}</Text>
-      {linkTo && <MyLink to={linkTo}>{linkTo}</MyLink>}
-
-      {children}
+    <View style={{ flex: 1, backgroundColor: 'white' }}>
+      <Text>Item: {item.id}</Text>
+      <ProfileStack />
     </View>
   );
 }
@@ -103,6 +178,10 @@ const containerStyle: StyleProp<ViewStyle> = Platform.select({
     overflow: 'hidden',
   },
   default: {
+    // top: 100,
+    // width: 150,
+    // height: 150,
+    // alignSelf: 'center',
     flex: 1,
   },
 });
@@ -110,6 +189,24 @@ const containerStyle: StyleProp<ViewStyle> = Platform.select({
 function AppContainer({ children }: any) {
   return <View style={containerStyle}>{children}</View>;
 }
+
+const styles = {
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  card: {
+    height: 75,
+    width: '100%',
+    borderRadius: 4,
+    borderWidth: 1,
+    marginVertical: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+};
 
 const APP_NAME = 'example';
 // register the app

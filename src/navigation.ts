@@ -136,11 +136,15 @@ function resolve(to: string, base: string): string {
   }
 
   let allSegments = baseSegments.concat(toSegments);
-  let segments = [];
+  let segments: string[] = [];
+
   for (let i = 0, l = allSegments.length; i < l; i++) {
     let segment = allSegments[i];
-    if (segment === '..') segments.pop();
-    else if (segment !== '.') segments.push(segment);
+    if (segment === '..') {
+      segments.pop();
+    } else if (segment !== '.') {
+      segments.push(segment);
+    }
   }
 
   return addQuery('/' + segments.join('/'), toQuery);
@@ -159,4 +163,4 @@ function addQuery(pathname: string, query?: string) {
   return pathname + (query ? `?${query}` : '');
 }
 
-export { createNavigation };
+export { createNavigation, resolve };

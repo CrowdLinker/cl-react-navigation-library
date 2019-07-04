@@ -1,5 +1,5 @@
 // app entry
-import React, { useState } from 'react';
+import React, { useState, Children } from 'react';
 import {
   AppRegistry,
   Platform,
@@ -8,21 +8,22 @@ import {
   ViewStyle,
   StyleProp,
   Button,
+  SafeAreaView,
 } from 'react-native';
 import {
   Link,
   Navigator,
-  Tabs,
   Pager,
-  Stack,
   Tabbar,
   Tab,
+  Tabs,
+  Stack,
 } from 'react-navigation-library';
 
 import { FlatList, BorderlessButton } from 'react-native-gesture-handler';
 
 function PagerApp() {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(-1);
 
   function handleChange(index: number) {
     setActiveIndex(index);
@@ -30,34 +31,40 @@ function PagerApp() {
 
   return (
     <AppContainer>
-      <Pager index={activeIndex} onChange={handleChange}>
-        <Screen style={{ backgroundColor: 'aquamarine' }}>
+      <Pager
+        type="stack"
+        index={activeIndex}
+        onChange={handleChange}
+        width={150}
+        max={5}
+      >
+        <ScreenA style={{ backgroundColor: 'aquamarine' }} unmountOnExit>
           <Text>0</Text>
           <BorderlessButton onPress={() => setActiveIndex(activeIndex + 1)}>
             <Text>Next</Text>
           </BorderlessButton>
-        </Screen>
-        <Screen style={{ backgroundColor: 'orange' }}>
+        </ScreenA>
+        <ScreenA style={{ backgroundColor: 'orange' }} unmountOnExit>
           <Text>1</Text>
           <BorderlessButton onPress={() => setActiveIndex(activeIndex + 1)}>
             <Text>Next</Text>
           </BorderlessButton>
-        </Screen>
-        <Screen style={{ backgroundColor: 'yellow' }}>
+        </ScreenA>
+        <ScreenA style={{ backgroundColor: 'yellow' }}>
           <Text>2</Text>
           <BorderlessButton onPress={() => setActiveIndex(activeIndex + 1)}>
             <Text>Next</Text>
           </BorderlessButton>
-        </Screen>
-        <Screen style={{ backgroundColor: 'green' }}>
+        </ScreenA>
+        <ScreenA style={{ backgroundColor: 'green' }}>
           <Text>3</Text>
-        </Screen>
-        <Screen style={{ backgroundColor: 'purple' }}>
+        </ScreenA>
+        <ScreenA style={{ backgroundColor: 'purple' }}>
           <Text>4</Text>
-        </Screen>
+        </ScreenA>
       </Pager>
 
-      <View style={{ height: 50, width: '100%' }}>
+      <View style={{ height: 100, width: '100%' }}>
         <Button title="Inc" onPress={() => setActiveIndex(activeIndex + 1)} />
         <Button title="Dec" onPress={() => setActiveIndex(activeIndex - 1)} />
       </View>
@@ -65,29 +72,28 @@ function PagerApp() {
   );
 }
 
-function Screen({ children, style }) {
+function ScreenA({ children, style }) {
   return <View style={[styles.container, style]}>{children}</View>;
 }
 
 function ProfileStack({}) {
   return (
     <Navigator>
+      <SafeAreaView />
       <Stack>
-        <Screen style={{ backgroundColor: 'blue' }} path="/">
-          <Text>1</Text>
+        <ScreenA style={{ backgroundColor: 'blue' }} path="/">
           <Link to="two">
-            <Text>Two</Text>
+            <Text>Next</Text>
           </Link>
-        </Screen>
-        <Screen style={{ backgroundColor: 'red' }} path="two">
-          <Text>2</Text>
+        </ScreenA>
+        <ScreenA style={{ backgroundColor: 'red' }} path="two">
           <Link to="../three">
-            <Text>Three</Text>
+            <Text>Next</Text>
           </Link>
-        </Screen>
-        <Screen style={{ backgroundColor: 'green' }} path="three">
+        </ScreenA>
+        <ScreenA style={{ backgroundColor: 'green' }} path="three">
           <Text>3</Text>
-        </Screen>
+        </ScreenA>
       </Stack>
     </Navigator>
   );
@@ -97,6 +103,7 @@ function App() {
   return (
     <AppContainer>
       <Navigator name="main-tabs" showLocationBar initialPath="/home">
+        <SafeAreaView />
         <Tabs>
           <Feed name="Home" path="home" />
           <Feed name="News" path="news" />
@@ -133,7 +140,7 @@ function Feed({ name }: any) {
     <Navigator name={name}>
       <Stack>
         <List items={items} />
-        <Profile path="/profile/:id" />
+        <Profile path="/profile/:id" unmountOnExit />
       </Stack>
     </Navigator>
   );
@@ -161,7 +168,12 @@ function Card({ item }) {
 
 function Profile({ item = {} }) {
   return (
-    <View style={{ flex: 1, backgroundColor: 'white' }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: 'white',
+      }}
+    >
       <Text>Item: {item.id}</Text>
       <ProfileStack />
     </View>
@@ -178,7 +190,7 @@ const containerStyle: StyleProp<ViewStyle> = Platform.select({
     overflow: 'hidden',
   },
   default: {
-    // top: 100,
+    // top: 50,
     // width: 150,
     // height: 150,
     // alignSelf: 'center',
@@ -195,6 +207,7 @@ const styles = {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
   },
 
   card: {

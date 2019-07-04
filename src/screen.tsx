@@ -1,4 +1,4 @@
-import React, { Component, cloneElement } from 'react';
+import React, { Component, cloneElement, Children } from 'react';
 import { View, StyleProp, ViewStyle } from 'react-native';
 
 interface ScreenProps {
@@ -8,15 +8,39 @@ interface ScreenProps {
 }
 
 class Screen extends Component<ScreenProps> {
-  shouldComponentUpdate(nextProps: ScreenProps) {
-    return this.props.active || nextProps.active;
+  state = {
+    alive: this.props.active,
+  };
+
+  timerRef: any = null;
+
+  child = Children.only(this.props.children);
+
+  componentDidUpdate() {
+    if (!this.state.alive && this.props.active) {
+      this.setState({ alive: true });
+    }
+
+    if (!this.props.active && this.child.props.unmountOnExit) {
+      if (this.state.alive) {
+        this.timerRef = setTimeout(() => {
+          this.setState({ alive: false });
+        }, 500);
+      }
+    }
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this.timerRef);
   }
 
   render() {
-    const { children, active, style } = this.props;
+    const { active } = this.props;
+    const { alive } = this.state;
+
     return (
-      <View style={[style || { flex: 1 }]}>
-        {cloneElement(children, { active })}
+      <View style={[{ flex: 1 }, this.child.props.style]}>
+        {alive ? cloneElement(this.child, { active }) : null}
       </View>
     );
   }

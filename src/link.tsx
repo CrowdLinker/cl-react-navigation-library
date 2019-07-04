@@ -32,7 +32,10 @@ function Link({ to, state, children, style, options }: LinkProps) {
             }
 
             return (
-              <BorderlessButton onPress={() => navigate()} style={style}>
+              <BorderlessButton
+                onPress={() => navigate()}
+                style={[{ flex: 1 }, style]}
+              >
                 <View style={{ flex: 1 }} accessible>
                   {children}
                 </View>

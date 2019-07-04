@@ -21,9 +21,7 @@ function HeadersImpl({ activeIndex, children }: HeadersProps) {
 function Headers({ children }: { children: any }) {
   return (
     <NavigatorContext.Consumer>
-      {({ activeIndex }) => (
-        <HeadersImpl activeIndex={activeIndex}>{children}</HeadersImpl>
-      )}
+      {({ index }) => <HeadersImpl activeIndex={index}>{children}</HeadersImpl>}
     </NavigatorContext.Consumer>
   );
 }
@@ -58,8 +56,8 @@ function TabbarImpl({ activeIndex, style, children }: any) {
 function Tabbar({ children, ...rest }: HeaderProps) {
   return (
     <NavigatorContext.Consumer>
-      {({ activeIndex }) => (
-        <TabbarImpl activeIndex={activeIndex} {...rest}>
+      {({ index }) => (
+        <TabbarImpl activeIndex={index} {...rest}>
           {children}
         </TabbarImpl>
       )}

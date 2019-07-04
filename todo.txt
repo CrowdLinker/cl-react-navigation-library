@@ -39,8 +39,10 @@
 -- finding most recent match w/ tabs as default behaviour -- optional?
 -- route component for dynamic matches (e.g a header) -- or match component with a path as a prop 
 -- relative links in a navigator should be more intuitive 
--- shouldn't animate to initial route, just directly set offset values, same goes for intermediate screens
--- navigation consumer component to set screens and whatnot -- repeated code in tabs / stack
--- shared pager component 
--- stack animation bug
--- control mounting -- render ajacent, last match if unmounting / -1
+-- restore routes api to navigator?
+-- control mounting by screen and tabs/stack -- render ajacent, last match if unmounting / -1
+-- fix styles on tabbar / header, tabbar is in header sometimes, link component style
+-- intermediate screens should not animate
+-- turn off animations?
+-- navigator should have its own state shared between child screens 
+-- basepath / navigate fn  should be scoped by navigator 

@@ -1,15 +1,34 @@
 import React, { Component, Children } from 'react';
 import { View, StyleProp, ViewStyle } from 'react-native';
-import { Pager, PagerProps } from './pager';
 import { NavigatorContext, NavigatorState } from './navigator';
 import { createScreen } from './create-screen';
 import { Screen } from './screen';
 import { PanGestureHandlerProperties } from 'react-native-gesture-handler';
+import { Pager } from './pager';
 
-type Props = TabsProps & Partial<PagerProps> & NavigatorState;
+interface ScreenContainerProps {
+  onChange: (index: number) => void;
+  index: number;
+  defaultIndex: number;
+  children: any;
+  width?: number;
+  pan: Partial<PanGestureHandlerProperties>;
+  style?: StyleProp<ViewStyle>;
+}
 
-class TabsImpl extends Component<Props> {
-  constructor(props: Props) {
+class TabsImpl extends React.Component<ScreenContainerProps & NavigatorState> {
+  static defaultProps = {
+    defaultIndex: 0,
+    pan: {
+      enabled: true,
+    },
+  };
+
+  state = {
+    rendered: [this.props.defaultIndex],
+  };
+
+  constructor(props: ScreenContainerProps & NavigatorState) {
     super(props);
 
     const routes = Children.map(
@@ -20,7 +39,20 @@ class TabsImpl extends Component<Props> {
     props.setRoutes(routes);
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps: ScreenContainerProps) {
+    if (prevProps.index !== this.props.index) {
+      if (this.props.index !== -1) {
+        this.setState((state: any) => {
+          return {
+            rendered: [
+              ...state.rendered.filter(i => i !== this.props.index),
+              this.props.index,
+            ],
+          };
+        });
+      }
+    }
+
     if (prevProps.children.length !== this.props.children.length) {
       const routes = Children.map(
         this.props.children,
@@ -32,32 +64,29 @@ class TabsImpl extends Component<Props> {
   }
 
   render() {
-    const {
-      style,
-      children,
-      activeIndex,
-      handleChange,
-      routes,
-      defaultIndex = 0,
-      ...rest
-    } = this.props;
+    const { children, index, ...rest } = this.props;
+    if (children.length === 0) {
+      return null;
+    }
 
-    const index = activeIndex < 0 ? defaultIndex : activeIndex;
+    const { rendered } = this.state;
+    const lastMatch = rendered[rendered.length - 1];
+    const match = index > -1 ? index : lastMatch;
 
     return (
-      <View style={[style || { flex: 1 }]}>
-        <Pager {...rest} index={index} onChange={handleChange}>
-          {Children.map(children, (element: any, index: number) => {
-            const active = index === activeIndex;
+      <Pager
+        {...rest}
+        index={match}
+        type="tabs"
+        max={Children.count(children) - 1}
+      >
+        {Children.map(children, (element: any, i: number) => {
+          const active = i === match;
 
-            return (
-              <Screen active={active}>
-                {createScreen(element, active, element.props.path || '/')}
-              </Screen>
-            );
-          })}
-        </Pager>
-      </View>
+          const screen = createScreen(element, active, element.props.path);
+          return <Screen active={active}>{screen}</Screen>;
+        })}
+      </Pager>
     );
   }
 }
@@ -66,6 +95,8 @@ interface TabsProps extends PanGestureHandlerProperties {
   children: any;
   defaultIndex?: number;
   style?: StyleProp<ViewStyle>;
+  pan?: Partial<PanGestureHandlerProperties>;
+  width?: number;
 }
 
 function Tabs({ children, ...rest }: TabsProps) {

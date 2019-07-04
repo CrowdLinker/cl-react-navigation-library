@@ -5,16 +5,16 @@ import { Navigation } from './navigation';
 const NOOP = () => {};
 
 export interface NavigatorState {
-  activeIndex: number;
+  index: number;
   routes: string[];
-  handleChange: (nextIndex: number) => void;
+  onChange: (nextIndex: number) => void;
   setRoutes: (routes: string[]) => void;
 }
 
 export const NavigatorContext = createContext<NavigatorState>({
-  activeIndex: 0,
+  index: 0,
   routes: [],
-  handleChange: NOOP,
+  onChange: NOOP,
   setRoutes: NOOP,
 });
 
@@ -36,10 +36,10 @@ class NavigatorImpl extends Component<NavigatorProps> {
       },
     } = this.props;
 
-    const { activeIndex, routes } = this.state;
+    const { index, routes } = this.state;
 
     // is not focused so we shouldnt push this view
-    if (activeIndex !== -1 && activeIndex !== nextIndex) {
+    if (index !== -1 && index !== nextIndex) {
       const next = routes[nextIndex];
 
       if (next) {
@@ -73,26 +73,26 @@ class NavigatorImpl extends Component<NavigatorProps> {
   };
 
   state = {
-    activeIndex: -1,
-    handleChange: this.handleChange,
+    index: -1,
+    onChange: this.handleChange,
     routes: [],
     setRoutes: this.setRoutes,
   };
 
   componentDidUpdate(prevProps: NavigatorProps, prevState: NavigatorState) {
     if (prevProps.location !== this.props.location) {
-      const activeIndex = this.getActiveIndex(this.state.routes);
+      const index = this.getActiveIndex(this.state.routes);
 
-      if (activeIndex !== this.state.activeIndex) {
-        this.setState({ activeIndex });
+      if (index !== this.state.index) {
+        this.setState({ index });
       }
     }
 
     if (prevState.routes.length !== this.state.routes.length) {
-      const activeIndex = this.getActiveIndex(this.state.routes);
+      const index = this.getActiveIndex(this.state.routes);
 
-      if (activeIndex !== this.state.activeIndex) {
-        this.setState({ activeIndex });
+      if (index !== this.state.index) {
+        this.setState({ index });
       }
     }
   }
@@ -104,7 +104,7 @@ class NavigatorImpl extends Component<NavigatorProps> {
       <NavigatorContext.Provider value={this.state}>
         {typeof children === 'function'
           ? children({
-              activeIndex: this.state.activeIndex,
+              index: this.state.index,
               state: navigation.current.state,
               location,
             })

@@ -27,12 +27,10 @@ function createScreen(element: any, active: boolean, path: string) {
 
             return (
               <BasepathContext.Provider value={pathname}>
-                <CacheState
-                  active={active}
-                  state={navigation ? navigation.current.state : {}}
-                >
-                  {state => cloneElement(element, { ...props, ...state })}
-                </CacheState>
+                {cloneElement(element, {
+                  ...props,
+                  ...(navigation ? navigation.current.state : {}),
+                })}
               </BasepathContext.Provider>
             );
           }}
@@ -43,31 +41,6 @@ function createScreen(element: any, active: boolean, path: string) {
 }
 
 export { createScreen };
-
-interface CacheStateProps {
-  children: any;
-  state: Object;
-  active: boolean;
-}
-
-class CacheState extends React.Component<CacheStateProps> {
-  state = this.props.state;
-
-  componentDidUpdate(prevProps: CacheStateProps) {
-    if (!prevProps.active && this.props.active) {
-      this.setState(this.props.state);
-    }
-  }
-
-  shouldComponentUpdate(nextProps: CacheStateProps) {
-    return nextProps.active || this.props.active;
-  }
-
-  render() {
-    const { children } = this.props;
-    return children(this.state);
-  }
-}
 
 let paramRe = /^:(.+)/;
 

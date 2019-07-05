@@ -73,9 +73,5 @@
     "tsdx": "^0.6.1",
     "tslib": "^1.10.0",
     "typescript": "^3.5.2"
-  },
-  "dependencies": {
-    "react-native-pager-component": "^0.0.3",
-    "react-native-redash": "^7.1.0"
   }
 }

@@ -22,7 +22,6 @@ interface NavigatorProps {
   children: any;
   basepath: string;
   location: string;
-  name?: string;
   navigation: Navigation;
 }
 
@@ -116,10 +115,8 @@ class NavigatorImpl extends Component<NavigatorProps> {
 
 function Navigator({
   children,
-  name,
   ...rest
 }: {
-  name?: string;
   initialPath?: string;
   showLocationBar?: boolean;
   children: any;
@@ -130,7 +127,6 @@ function Navigator({
         <NavigationProvider {...rest}>
           {navigation => (
             <NavigatorImpl
-              name={name}
               location={navigation ? navigation.current.path : '/'}
               navigation={navigation}
               basepath={basepath}

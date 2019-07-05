@@ -1,30 +1,34 @@
 <Navigator>
-  -- set basepath context and navigate() to tab children 
-  -- pass activeIndex to tabs + other components
-  -- render prop maybe?
-
-  e.g. {({ match }) =>  null } -- can control which components are unmounted this way?
+  -- computes activeIndex based on location 
+  -- pass activeIndex to tabs/stack
+  -- set basepath context, navigate, and state to children (link / screen)
 
   <Headers>
     -- renders matching index only
-    -- include dx from pager via context?
     <Header>1</Header>
     <Header>2</Header>
     <Header>3</Header>
   </Headers>
 
-  <Tabs>
-    -- runs match fn for navigator 
+  <Tabs / Stack>
     -- pager w/ screens 
-    <Screen path='1' />
-    <Screen path='2' />
+    -- navigates to new location on gesture updates
+    -- control mounting and visible screens based on activeIndex and props
+
+    <Screen path='1' unmountOnExit lazy style={{ borderWidth: 1 }} />
+      -- consumer components - control unmounting, mounting, and style
+      -- receives active prop to indicate mounted state
+      -- receives state, params, and navigate()
+
+    <Screen path='2' /> 
     <Screen path='3' />
     
-  </Tabs>
+  </Tabs / Stack>
 
   <Tabbar>
-    -- active tab mapped to matching screens (should take path?)
-    -- has access to dx from pager via context, requires a container like navigator to register dx
+    -- active tab highlighted 
+    -- paths are mapped to screens based on order
+
     <Tab>1</Tab>
     <Tab>2</Tab>
     <Tab>3</Tab>
@@ -32,17 +36,13 @@
 
 </Navigator>
 
--- screens should be compatible w/ react-native-screens (e.g use active prop) in case we need it
--- fix typings so its clear when children are incorrect
--- control ability to unmount components at the path level, ability to mount adjacent tabs -- optimistic mode?
--- add switch navigator -- or the ability to unmount at the screen level
--- finding most recent match w/ tabs as default behaviour -- optional?
--- route component for dynamic matches (e.g a header) -- or match component with a path as a prop 
--- relative links in a navigator should be more intuitive 
--- restore routes api to navigator?
--- control mounting by screen and tabs/stack -- render ajacent, last match if unmounting / -1
--- fix styles on tabbar / header, tabbar is in header sometimes, link component style
--- intermediate screens should not animate
--- turn off animations?
--- navigator should have its own state shared between child screens 
--- basepath / navigate fn  should be scoped by navigator 
+-- reduce the amount of consumers (might help w/ performance)
+   - move path resolution into navigation (basepath / location used in links for navigate())
+
+   - navigator needs location to compute active index 
+   - screens need navigate and navigator state, location for params / query, set basepath context for children
+   - link needs navigate function 
+
+
+
+

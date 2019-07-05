@@ -3,6 +3,7 @@ import { StyleProp, ViewStyle, View } from 'react-native';
 import { NavigationContext, BasepathContext } from './navigation-provider';
 import { NavigateOptions } from './navigation';
 import { BorderlessButton } from 'react-native-gesture-handler';
+import { NavigateContext } from './navigator';
 
 interface LinkProps {
   to: string;
@@ -15,25 +16,17 @@ interface LinkProps {
 
 function Link({ to, state, children, style, options }: LinkProps) {
   return (
-    <NavigationContext.Consumer>
-      {navigation => (
-        <BasepathContext.Consumer>
-          {(basepath = '/') => {
-            function navigate() {
-              // this might help with performance -- not sure
-              requestAnimationFrame(() => {
-                const base = resolve(
-                  basepath,
-                  navigation ? navigation.current.path : ''
-                );
-
-                navigation && navigation.navigate(to, base, state, options);
-              });
-            }
-
+    <BasepathContext.Consumer>
+      {(basepath = '/') => (
+        <NavigateContext.Consumer>
+          {navigate => {
             return (
               <BorderlessButton
-                onPress={() => navigate()}
+                onPress={() => {
+                  requestAnimationFrame(() => {
+                    navigate(to, state || {}, basepath);
+                  });
+                }}
                 style={[{ flex: 1 }, style]}
               >
                 <View style={{ flex: 1 }} accessible>
@@ -42,38 +35,10 @@ function Link({ to, state, children, style, options }: LinkProps) {
               </BorderlessButton>
             );
           }}
-        </BasepathContext.Consumer>
+        </NavigateContext.Consumer>
       )}
-    </NavigationContext.Consumer>
+    </BasepathContext.Consumer>
   );
 }
 
 export { Link };
-
-let paramRe = /^:(.+)/;
-
-function resolve(pathname: string, location: string): string {
-  let l = location;
-
-  if (location.includes('?')) {
-    l = location.split('?')[0];
-  }
-
-  const pathSegments = pathname.split('/').filter(Boolean);
-  const locationSegments = l.split('/').filter(Boolean);
-
-  let segments: string[] = [];
-
-  for (let i = 0; i < pathSegments.length; i++) {
-    let subpath = pathSegments[i];
-    const isDynamic = paramRe.exec(subpath);
-
-    if (isDynamic) {
-      subpath = locationSegments[i];
-    }
-
-    segments.push(subpath);
-  }
-
-  return '/' + segments.join('/');
-}

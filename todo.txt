@@ -3,8 +3,12 @@
   -- pass activeIndex to tabs/stack
   -- set basepath context, navigate, and state to children (link / screen)
 
+  {({ state, index, navigate, back })}
+
   <Headers>
     -- renders matching index only
+    -- provide default index?
+
     <Header>1</Header>
     <Header>2</Header>
     <Header>3</Header>
@@ -33,16 +37,11 @@
     <Tab>2</Tab>
     <Tab>3</Tab>
   </Tabbar>
-
 </Navigator>
 
--- reduce the amount of consumers (might help w/ performance)
-   - move path resolution into navigation (basepath / location used in links for navigate())
 
-   - navigator needs location to compute active index 
-   - screens need navigate and navigator state, location for params / query, set basepath context for children
-   - link needs navigate function 
-
-
-
+-- share pan value with tabbar / headers 
+-- react-native-screens
+-- pager component - changing child screen counts
+-- hide intermediate screens 
 

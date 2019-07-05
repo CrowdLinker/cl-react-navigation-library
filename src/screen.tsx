@@ -35,14 +35,10 @@ class Screen extends Component<ScreenProps> {
   }
 
   render() {
-    const { active } = this.props;
+    const { children } = this.props;
     const { alive } = this.state;
 
-    return (
-      <View style={[{ flex: 1 }, this.child.props.style]}>
-        {alive ? cloneElement(this.child, { active }) : null}
-      </View>
-    );
+    return <View style={[{ flex: 1 }]}>{alive ? children : null}</View>;
   }
 }
 

@@ -1,7 +1,5 @@
 import React, { Component, Children } from 'react';
 import { NavigatorContext, NavigatorState } from './navigator';
-import { createScreen } from './create-screen';
-import { Screen } from './screen';
 import { PanGestureHandlerProperties } from 'react-native-gesture-handler';
 import { StyleProp, ViewStyle, View } from 'react-native';
 import { Pager } from './pager';
@@ -23,55 +21,30 @@ class StackImpl extends React.Component<ScreenContainerProps & NavigatorState> {
     },
   };
 
-  constructor(props: ScreenContainerProps & NavigatorState) {
-    super(props);
-
-    const routes = Children.map(
-      props.children,
-      element => element.props.path || '/'
-    );
-
-    props.setRoutes(routes);
-  }
-
   state = {
-    rendered: [this.props.defaultIndex],
+    matchingIndex: this.props.defaultIndex,
   };
 
   componentDidUpdate(prevProps: ScreenContainerProps) {
-    if (prevProps.index !== this.props.index) {
-      if (this.props.index !== -1) {
-        this.setState((state: any) => {
-          return {
-            rendered: [
-              ...state.rendered.filter(i => i !== this.props.index),
-              this.props.index,
-            ],
-          };
-        });
-      }
-    }
-
-    if (prevProps.children.length !== this.props.children.length) {
-      const routes = Children.map(
-        this.props.children,
-        element => element.props.path || '/'
-      );
-
-      this.props.setRoutes(routes);
+    const { index, defaultIndex } = this.props;
+    if (prevProps.index !== index) {
+      this.setState({ matchingIndex: index === -1 ? defaultIndex : index });
     }
   }
 
+  isScreenActive = (childIndex: number) => {
+    const { matchingIndex } = this.state;
+    return childIndex <= matchingIndex;
+  };
+
   render() {
-    const { children, index, style, pan, ...rest } = this.props;
+    const { children, style, pan, ...rest } = this.props;
 
     if (children.length === 0) {
       return null;
     }
 
-    const { rendered } = this.state;
-    const lastMatch = rendered[rendered.length - 1];
-    const match = index > -1 ? index : lastMatch;
+    const { matchingIndex } = this.state;
 
     return (
       <View style={[{ flex: 1 }, style]}>
@@ -79,17 +52,13 @@ class StackImpl extends React.Component<ScreenContainerProps & NavigatorState> {
           {...rest}
           pan={{
             ...pan,
-            enabled: pan.enabled && match !== 0,
+            enabled: pan.enabled && matchingIndex > 0,
           }}
-          index={match}
+          index={matchingIndex}
           type="stack"
           max={Children.count(children) - 1}
         >
-          {Children.map(children, (element: any, i: number) => {
-            const active = i <= match;
-            const screen = createScreen(element, active, element.props.path);
-            return <Screen active={active}>{screen}</Screen>;
-          })}
+          {this.props.renderScreens(this.isScreenActive, this.props.children)}
         </Pager>
       </View>
     );

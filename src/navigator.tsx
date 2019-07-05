@@ -1,31 +1,44 @@
-import React, { Component, createContext } from 'react';
+import React, { Component, createContext, Children, cloneElement } from 'react';
 import { BasepathContext, NavigationProvider } from './navigation-provider';
 import { Navigation } from './navigation';
+import { Screen } from './screen';
 
 const NOOP = () => {};
 
 export interface NavigatorState {
   index: number;
-  routes: string[];
   onChange: (nextIndex: number) => void;
-  setRoutes: (routes: string[]) => void;
+  state: Object;
+  setNavigatorState: (nextState: Object) => void;
+  renderScreens: (
+    isScreenActive: (childIndex: number, childElement: any) => boolean,
+    children: any
+  ) => any;
 }
 
 export const NavigatorContext = createContext<NavigatorState>({
   index: 0,
-  routes: [],
   onChange: NOOP,
-  setRoutes: NOOP,
+  state: {},
+  setNavigatorState: NOOP,
+  renderScreens: NOOP,
 });
+
+type NavigateFn = (to: string, state: Object, basepath?: string) => void;
+
+export const NavigateContext = createContext<NavigateFn>(NOOP);
 
 interface NavigatorProps {
   children: any;
   basepath: string;
   location: string;
   navigation: Navigation;
+  initialState: Object;
 }
 
 class NavigatorImpl extends Component<NavigatorProps> {
+  routes: string[] = [];
+
   handleChange = (nextIndex: number) => {
     const {
       basepath,
@@ -35,11 +48,11 @@ class NavigatorImpl extends Component<NavigatorProps> {
       },
     } = this.props;
 
-    const { index, routes } = this.state;
+    const { index } = this.state;
 
     // is not focused so we shouldnt push this view
     if (index !== -1 && index !== nextIndex) {
-      const next = routes[nextIndex];
+      const next = this.routes[nextIndex];
 
       if (next) {
         const pathname = getPathname(next, basepath);
@@ -50,13 +63,13 @@ class NavigatorImpl extends Component<NavigatorProps> {
     }
   };
 
-  getActiveIndex = (routes: string[]) => {
+  getActiveIndex = () => {
     const { basepath, location } = this.props;
 
     let activeIndex = -1;
 
-    for (let i = 0; i < routes.length; i++) {
-      const pathname = getPathname(routes[i], basepath);
+    for (let i = 0; i < this.routes.length; i++) {
+      const pathname = getPathname(this.routes[i], basepath);
       const isMatch = match(pathname, location);
 
       if (isMatch) {
@@ -67,28 +80,72 @@ class NavigatorImpl extends Component<NavigatorProps> {
     return activeIndex;
   };
 
-  setRoutes = (routes: string[]) => {
-    this.setState({ routes });
+  setNavigatorState = (newState: Object) => {
+    this.setState((state: NavigatorState) => {
+      return {
+        ...state,
+        state: {
+          ...state.state,
+          ...newState,
+        },
+      };
+    });
+  };
+
+  navigate = (to: string, state: Object, basepath?: string) => {
+    const {
+      location,
+      basepath: navigatorBasepath,
+      navigation: { navigate },
+    } = this.props;
+
+    const query = getQuery(location);
+
+    this.setNavigatorState({ ...state, query });
+    navigate(to, basepath || navigatorBasepath);
+  };
+
+  renderScreens = (
+    isScreenActive: (childIndex: number, childElement: any) => boolean,
+    children: any
+  ) => {
+    const { basepath, location } = this.props;
+
+    const routes = Children.map(children, element => element.props.path || '/');
+
+    if (routes.length !== this.routes.length) {
+      this.routes = routes;
+    }
+
+    return Children.map(children, (element: any, index: number) => {
+      const path = routes[index];
+      const pathname = getPathname(path || '/', basepath);
+      const active = isScreenActive(index, element);
+      const params = getParams(pathname, location);
+
+      return (
+        <BasepathContext.Provider value={pathname}>
+          <Screen active={active}>{cloneElement(element, params)}</Screen>
+        </BasepathContext.Provider>
+      );
+    });
+  };
+
+  static defaultProps = {
+    initialState: {},
   };
 
   state = {
     index: -1,
     onChange: this.handleChange,
-    routes: [],
-    setRoutes: this.setRoutes,
+    state: this.props.initialState,
+    setNavigatorState: this.setNavigatorState,
+    renderScreens: this.renderScreens,
   };
 
-  componentDidUpdate(prevProps: NavigatorProps, prevState: NavigatorState) {
+  componentDidUpdate(prevProps: NavigatorProps) {
     if (prevProps.location !== this.props.location) {
-      const index = this.getActiveIndex(this.state.routes);
-
-      if (index !== this.state.index) {
-        this.setState({ index });
-      }
-    }
-
-    if (prevState.routes.length !== this.state.routes.length) {
-      const index = this.getActiveIndex(this.state.routes);
+      const index = this.getActiveIndex();
 
       if (index !== this.state.index) {
         this.setState({ index });
@@ -97,26 +154,32 @@ class NavigatorImpl extends Component<NavigatorProps> {
   }
 
   render() {
-    const { children, navigation, location } = this.props;
+    const { children, location, navigation } = this.props;
 
     return (
-      <NavigatorContext.Provider value={this.state}>
-        {typeof children === 'function'
-          ? children({
-              index: this.state.index,
-              state: navigation.current.state,
-              location,
-            })
-          : children}
-      </NavigatorContext.Provider>
+      <NavigateContext.Provider value={this.navigate}>
+        <NavigatorContext.Provider value={this.state}>
+          {typeof children === 'function'
+            ? children({
+                index: this.state.index,
+                state: this.state.state,
+                navigate: this.navigate,
+                back: navigation.back,
+                location,
+              })
+            : children}
+        </NavigatorContext.Provider>
+      </NavigateContext.Provider>
     );
   }
 }
 
 function Navigator({
   children,
+  initialState,
   ...rest
 }: {
+  initialState?: Object;
   initialPath?: string;
   showLocationBar?: boolean;
   children: any;
@@ -127,6 +190,7 @@ function Navigator({
         <NavigationProvider {...rest}>
           {navigation => (
             <NavigatorImpl
+              initialState={initialState}
               location={navigation ? navigation.current.path : '/'}
               navigation={navigation}
               basepath={basepath}
@@ -221,4 +285,32 @@ function match(pathname: string, location: string): boolean {
   }
 
   return match;
+}
+
+function getParams(
+  pathname: string,
+  location: string
+): { [param: string]: string } | undefined {
+  let params: { [param: string]: string } | undefined;
+
+  const pathSegments = pathname.split('/');
+  const locationSegments = location.split('/');
+
+  for (let i = 0; i < pathSegments.length; i++) {
+    const paramsMatch = paramRe.exec(pathSegments[i]);
+    if (paramsMatch) {
+      if (!params) {
+        params = {};
+      }
+
+      params[paramsMatch[1]] = locationSegments[i];
+    }
+  }
+
+  return params;
+}
+
+function getQuery(location: string): string {
+  const [, query] = location.split('?');
+  return query || '';
 }

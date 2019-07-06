@@ -69,11 +69,19 @@ class NavigatorImpl extends Component<NavigatorProps> {
     let activeIndex = -1;
 
     for (let i = 0; i < this.routes.length; i++) {
-      const pathname = getPathname(this.routes[i], basepath);
+      const path = this.routes[i];
+      const pathname = getPathname(path, basepath);
       const isMatch = match(pathname, location);
 
       if (isMatch) {
-        activeIndex = i;
+        // root path is greedy -- prevent it from matching over others previous to it
+        if (path !== '/') {
+          activeIndex = i;
+        }
+
+        if (path === '/' && activeIndex === -1) {
+          activeIndex = i;
+        }
       }
     }
 

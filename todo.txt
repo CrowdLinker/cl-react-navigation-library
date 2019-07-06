@@ -1,4 +1,5 @@
 <Navigator>
+  -- defaultIndex passed to headers / tabs / stack / tabbar 
   -- computes activeIndex based on location 
   -- pass activeIndex to tabs/stack
   -- set basepath context, navigate, and state to children (link / screen)
@@ -45,3 +46,5 @@
 -- pager component - changing child screen counts
 -- hide intermediate screens 
 
+-- navigate() function should resolve the 'to' paths -- match dynamic parts w/ location 
+   to get the correct values?

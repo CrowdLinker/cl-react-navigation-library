@@ -51,9 +51,10 @@ function createNavigation(initial = '/'): Navigation {
       state?: Object,
       options?: { latest?: boolean }
     ) {
-      let next = resolve(to, from);
+      const path = paths[index];
+      let next = resolve(to, from, path);
 
-      if (next === paths[index]) {
+      if (next === path) {
         return;
       }
 
@@ -115,9 +116,17 @@ function createNavigation(initial = '/'): Navigation {
 // The following util functions were taken from the @reach/router library:
 // https://github.com/reach/router/blob/master/src/lib/utils.js
 
-function resolve(to: string, base: string): string {
+let paramRe = /^:(.+)/;
+
+function resolve(to: string, base: string, location: string): string {
   if (startsWith(to, '/')) {
     return to;
+  }
+
+  let l = location;
+
+  if (location.includes('?')) {
+    l = location.split('?')[0];
   }
 
   let [toPathname, toQuery] = to.split('?');
@@ -125,6 +134,7 @@ function resolve(to: string, base: string): string {
 
   let toSegments = segmentize(toPathname);
   let baseSegments = segmentize(basePathname);
+  const locationSegments = l.split('/').filter(Boolean);
 
   if (toSegments[0] === '') {
     return basePathname;
@@ -143,6 +153,12 @@ function resolve(to: string, base: string): string {
     if (segment === '..') {
       segments.pop();
     } else if (segment !== '.') {
+      const isDynamic = paramRe.exec(segment);
+
+      if (isDynamic) {
+        segment = locationSegments[i];
+      }
+
       segments.push(segment);
     }
   }

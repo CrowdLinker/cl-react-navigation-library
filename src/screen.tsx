@@ -1,10 +1,12 @@
-import React, { Component, cloneElement, Children } from 'react';
+import React, { Component, Children } from 'react';
 import { View, StyleProp, ViewStyle } from 'react-native';
+import { BasepathContext } from './navigation-provider';
 
 interface ScreenProps {
   style?: StyleProp<ViewStyle>;
   active: boolean;
   children: any;
+  path: string;
 }
 
 class Screen extends Component<ScreenProps> {
@@ -35,10 +37,16 @@ class Screen extends Component<ScreenProps> {
   }
 
   render() {
-    const { children } = this.props;
+    const { children, path } = this.props;
     const { alive } = this.state;
 
-    return <View style={[{ flex: 1 }]}>{alive ? children : null}</View>;
+    return alive ? (
+      <View style={[{ flex: 1 }]}>
+        <BasepathContext.Provider value={path}>
+          {children}
+        </BasepathContext.Provider>
+      </View>
+    ) : null;
   }
 }
 

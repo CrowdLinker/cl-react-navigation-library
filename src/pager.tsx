@@ -35,16 +35,23 @@ const {
   diffClamp,
   max,
   min,
+  abs,
+  or,
 } = Animated;
 
 const { width: screenWidth } = Dimensions.get('window');
+
+const PagerTypes = {
+  TABS: new Value(1),
+  STACK: new Value(2),
+};
 
 export interface PagerProps {
   index: number;
   onChange: (nextIndex: number) => void;
   width: number;
   type: 'stack' | 'tabs';
-  max: number;
+  numberOfScreens: number;
   pan?: Partial<PanGestureHandlerProperties>;
 }
 
@@ -54,13 +61,15 @@ class Pager extends Component<PagerProps> {
   gestureState = new Value(0);
   translateX = new Value(0);
   minIndex = new Value(0);
-  maxIndex = new Value(this.props.max);
+  maxIndex = new Value(this.props.numberOfScreens - 1);
+
+  type = this.props.type === 'stack' ? PagerTypes.STACK : PagerTypes.TABS;
 
   index = new Value(this.props.index);
+  prevIndex = new Value(this.props.index);
 
   static defaultProps = {
     width: screenWidth,
-    max: 1,
   };
 
   constructor(props: PagerProps) {
@@ -68,14 +77,21 @@ class Pager extends Component<PagerProps> {
 
     const percentDragged = divide(this.dragX, props.width);
     const threshold = 0.2;
-    const isRight = lessOrEq(percentDragged, -threshold);
+    const isRight = cond(
+      eq(this.type, PagerTypes.TABS),
+      lessOrEq(percentDragged, -threshold),
+      0
+    );
     const isLeft = greaterOrEq(percentDragged, threshold);
 
     const snapIndex = new Value(this.props.index);
     const clampedSnap = min(max(snapIndex, this.minIndex), this.maxIndex);
 
+    const indexChange = new Value(props.index);
+
     this.translateX = block([
       onChange(this.index, [
+        set(this.prevIndex, indexChange),
         set(snapIndex, this.index),
         call([this.index], ([index]) => this.props.onChange(index)),
       ]),
@@ -84,13 +100,18 @@ class Pager extends Component<PagerProps> {
         eq(this.gestureState, State.ACTIVE),
 
         [
+          set(this.prevIndex, this.index),
           set(
             snapIndex,
             add(this.index, cond(isRight, 1, cond(isLeft, -1, 0)))
           ),
           this.dragX,
         ],
-        [set(this.index, clampedSnap), set(this.dragX, 0)]
+        [
+          set(indexChange, this.index),
+          set(this.index, clampedSnap),
+          set(this.dragX, 0),
+        ]
       ),
 
       this.dragX,
@@ -128,9 +149,9 @@ class Pager extends Component<PagerProps> {
       });
     }
 
-    if (prevProps.max !== this.props.max) {
+    if (prevProps.numberOfScreens !== this.props.numberOfScreens) {
       requestAnimationFrame(() => {
-        this.maxIndex.setValue(this.props.max);
+        this.maxIndex.setValue(this.props.numberOfScreens - 1);
       });
     }
   }
@@ -153,6 +174,7 @@ class Pager extends Component<PagerProps> {
               gestureState={this.gestureState}
               dragX={this.translateX}
               type={type}
+              prevIndex={this.prevIndex}
             >
               {element}
             </PagerView>
@@ -163,9 +185,12 @@ class Pager extends Component<PagerProps> {
   }
 }
 
-function getToValue(index, activeIndex, width) {
+function getToValue(index, activeIndex, width, type) {
   const difference = index - activeIndex;
-  const clamped = Math.max(-0.3, Math.min(difference, 1));
+  const clamped = Math.max(
+    type === 'tabs' ? -1 : -0.3,
+    Math.min(difference, 1)
+  );
   const toValue = width * clamped;
   return toValue;
 }
@@ -174,7 +199,12 @@ class PagerView extends Component<any> {
   clock = new Clock();
 
   dx = new Value(
-    getToValue(this.props.index, this.props.initialIndex, this.props.width)
+    getToValue(
+      this.props.index,
+      this.props.initialIndex,
+      this.props.width,
+      this.props.type
+    )
   );
 
   translateX = new Value(0);
@@ -186,12 +216,19 @@ class PagerView extends Component<any> {
   constructor(props) {
     super(props);
 
+    const difference = sub(this.props.index, this.props.activeIndex);
+
     if (props.type === 'tabs') {
-      const difference = sub(this.props.index, this.props.activeIndex);
       const clamped = max(-1, min(difference, 1));
 
       const absoluteOffset = multiply(difference, this.props.width);
       const toValue = multiply(this.props.width, clamped);
+
+      const indexChange = abs(sub(props.prevIndex, props.activeIndex));
+      const isIntermediateScreen = and(
+        neq(props.activeIndex, props.index),
+        neq(props.prevIndex, props.index)
+      );
 
       this.translateX = block([
         onChange(this.props.dragX, []),
@@ -199,13 +236,24 @@ class PagerView extends Component<any> {
         cond(
           eq(this.props.gestureState, State.ACTIVE),
           [set(this.dx, add(absoluteOffset, this.props.dragX))],
-          [this.runSpring(this.clock, toValue)]
+          [
+            cond(
+              greaterThan(indexChange, 1),
+              [
+                cond(
+                  isIntermediateScreen,
+                  [set(this.dx, toValue)],
+                  [this.runSpring(this.clock, toValue)]
+                ),
+              ],
+              [this.runSpring(this.clock, toValue)]
+            ),
+          ]
         ),
 
         this.dx,
       ]) as any;
     } else {
-      const difference = sub(this.props.index, this.props.activeIndex);
       const clamped = max(-0.3, min(difference, 1));
       const toValue = multiply(this.props.width, clamped);
 
@@ -214,7 +262,11 @@ class PagerView extends Component<any> {
 
         cond(
           and(eq(difference, 0), eq(this.props.gestureState, State.ACTIVE)),
-          [set(this.dx, this.props.dragX)],
+          [
+            cond(greaterThan(this.props.dragX, 0), [
+              set(this.dx, this.props.dragX),
+            ]),
+          ],
           [this.runSpring(this.clock, toValue)]
         ),
 

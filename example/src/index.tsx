@@ -17,39 +17,84 @@ import {
   Tab,
   Tabs,
   Stack,
+  Pager,
 } from 'react-navigation-library';
 
 import { FlatList } from 'react-native-gesture-handler';
+
+function PagerTest() {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  function handleChange(index: number) {
+    setActiveIndex(index);
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Pager
+        index={activeIndex}
+        onChange={handleChange}
+        numberOfScreens={4}
+        type="tabs"
+      >
+        <MyScreen style={{ backgroundColor: 'white' }}>
+          <Text>Index 0</Text>
+        </MyScreen>
+        <MyScreen style={{ backgroundColor: 'white' }}>
+          <Text>Index 1</Text>
+        </MyScreen>
+        <MyScreen style={{ backgroundColor: 'white' }}>
+          <Text>Index 2</Text>
+        </MyScreen>
+        <MyScreen style={{ backgroundColor: 'white' }}>
+          <Text>Index 3</Text>
+        </MyScreen>
+      </Pager>
+
+      <View style={{ height: 100, width: '100%' }}>
+        <Button title="Inc" onPress={() => setActiveIndex(activeIndex + 2)} />
+        <Button title="Dec" onPress={() => setActiveIndex(activeIndex - 2)} />
+      </View>
+    </View>
+  );
+}
 
 function App() {
   return (
     <AppContainer>
       <SafeAreaView />
-      <Navigator showLocationBar initialPath="/app/home">
-        <Tabs>
-          <Entry path="entry" unmountOnExit />
-          <Feeds path="app" unmountOnExit />
+      <Navigator
+        name="MAIN_NAV"
+        routes={['entry', 'app']}
+        showLocationBar
+        initialPath="/app/home/profile/2/three"
+      >
+        <Tabs name="MAIN_TABS">
+          <Entry path="entry" />
+          <Feeds path="app" />
         </Tabs>
       </Navigator>
+
+      {/* <PagerTest /> */}
     </AppContainer>
   );
 }
 
 function Entry({  }: any) {
   return (
-    <Navigator>
-      <Tabs defaultIndex={1}>
+    <Navigator name="ENTRY_NAV" routes={['login', '/', 'signup']}>
+      <Tabs name="ENTRY_TABS">
         <Login path="login" />
-        <SelectScreen path="/" />
+        <SelectMyScreen path="/" />
         <Signup path="signup" />
       </Tabs>
     </Navigator>
   );
 }
 
-function SelectScreen({  }: any) {
+function SelectMyScreen({  }: any) {
   return (
-    <Screen
+    <MyScreen
       style={{
         justifyContent: 'center',
         alignItems: 'center',
@@ -64,35 +109,35 @@ function SelectScreen({  }: any) {
       <Link to="signup">
         <Text>Signup</Text>
       </Link>
-    </Screen>
+    </MyScreen>
   );
 }
 
 function Signup({  }: any) {
   return (
-    <Screen>
+    <MyScreen>
       <Text>Signup!</Text>
       <Link to="/app">
         <Text>Go to app</Text>
       </Link>
-    </Screen>
+    </MyScreen>
   );
 }
 
 function Login({  }: any) {
   return (
-    <Screen>
+    <MyScreen>
       <Text>Login!</Text>
       <Link to="/app">
         <Text>Go to app</Text>
       </Link>
-    </Screen>
+    </MyScreen>
   );
 }
 
 function Feeds({  }: any) {
   return (
-    <Navigator>
+    <Navigator name="FEEDS" routes={['home', 'news', 'popular']}>
       <Tabs>
         <Feed name="Home" path="home" />
         <Feed name="News" path="news" />
@@ -125,7 +170,7 @@ const items = Array.from({ length: 15 }).map((v, i) => {
 
 function Feed({  }: any) {
   return (
-    <Navigator>
+    <Navigator name="FEED" routes={['/', 'profile/:id']}>
       {({ state }: any) => (
         <Stack>
           <List items={items} path="/" />
@@ -157,10 +202,6 @@ function Card({ item }: any) {
 }
 
 function Profile({ item }: any) {
-  if (!item) {
-    return null;
-  }
-
   return (
     <View
       style={{
@@ -168,7 +209,7 @@ function Profile({ item }: any) {
         backgroundColor: 'white',
       }}
     >
-      <Text>Item: {item.id}</Text>
+      {/* <Text>Item: {item.id}</Text> */}
       <ProfileStack />
     </View>
   );
@@ -176,22 +217,22 @@ function Profile({ item }: any) {
 
 function ProfileStack({}) {
   return (
-    <Navigator>
+    <Navigator routes={['/', 'two', 'three']}>
       <SafeAreaView />
       <Stack>
-        <Screen style={{ backgroundColor: 'blue' }} path="/">
+        <MyScreen style={{ backgroundColor: 'blue' }} path="/">
           <Link to="two">
             <Text>Next</Text>
           </Link>
-        </Screen>
-        <Screen style={{ backgroundColor: 'red' }} path="two">
+        </MyScreen>
+        <MyScreen style={{ backgroundColor: 'red' }} path="two">
           <Link to="three">
             <Text>Next</Text>
           </Link>
-        </Screen>
-        <Screen style={{ backgroundColor: 'green' }} path="three">
+        </MyScreen>
+        <MyScreen style={{ backgroundColor: 'green' }} path="three">
           <Text>3</Text>
-        </Screen>
+        </MyScreen>
       </Stack>
     </Navigator>
   );
@@ -215,7 +256,7 @@ function AppContainer({ children }: any) {
   return <View style={containerStyle}>{children}</View>;
 }
 
-function Screen({ children, style }: any) {
+function MyScreen({ children, style }: any) {
   return <View style={[styles.container, style]}>{children}</View>;
 }
 

@@ -7,7 +7,6 @@ import { Pager } from './pager';
 interface ScreenContainerProps {
   onChange: (index: number) => void;
   index: number;
-  defaultIndex: number;
   children: any;
   width?: number;
   pan: Partial<PanGestureHandlerProperties>;
@@ -16,30 +15,14 @@ interface ScreenContainerProps {
 
 class TabsImpl extends React.Component<ScreenContainerProps & NavigatorState> {
   static defaultProps = {
-    defaultIndex: 0,
     pan: {
       enabled: true,
     },
   };
 
-  state = {
-    matchingIndex: this.props.defaultIndex,
-  };
-
-  componentDidUpdate(prevProps: ScreenContainerProps) {
-    const { index, defaultIndex } = this.props;
-    if (prevProps.index !== index) {
-      this.setState({ matchingIndex: index === -1 ? defaultIndex : index });
-    }
-  }
-
   isScreenActive = (childIndex: number, childElement: any) => {
-    const { matchingIndex } = this.state;
-    if (childElement.props.lazy) {
-      return childIndex === matchingIndex;
-    }
-
-    return true;
+    const { index } = this.props;
+    return childIndex === index;
   };
 
   render() {
@@ -49,14 +32,12 @@ class TabsImpl extends React.Component<ScreenContainerProps & NavigatorState> {
       return null;
     }
 
-    const { matchingIndex } = this.state;
-
     return (
       <Pager
         {...rest}
-        index={matchingIndex}
+        index={index}
         type="tabs"
-        max={Children.count(children) - 1}
+        numberOfScreens={Children.count(children)}
       >
         {this.props.renderScreens(this.isScreenActive, children)}
       </Pager>
@@ -66,7 +47,6 @@ class TabsImpl extends React.Component<ScreenContainerProps & NavigatorState> {
 
 interface TabsProps extends PanGestureHandlerProperties {
   children: any;
-  defaultIndex?: number;
   style?: StyleProp<ViewStyle>;
   pan?: Partial<PanGestureHandlerProperties>;
   width?: number;

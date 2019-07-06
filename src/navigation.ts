@@ -1,11 +1,10 @@
 // This is almost entirely from @reach/router's in-memory / native routing model:
 // https://github.com/reach/router/blob/master/src/lib/history.js
 
-export type Listener = (location: Location) => void;
+export type Listener = (location: string) => void;
 export type Navigate = (
   to: string,
   from: string,
-  state?: Object,
   options?: NavigateOptions
 ) => void;
 export type Back = (amount: number) => void;
@@ -13,13 +12,8 @@ export type NavigateOptions = {
   latest?: boolean;
 };
 
-export interface Location {
-  path: string;
-  state: Object;
-}
-
 export interface Navigation {
-  current: Location;
+  location: string;
   navigate: Navigate;
   listen: (listener: Listener) => () => void;
   back: Back;
@@ -28,7 +22,6 @@ export interface Navigation {
 
 function createNavigation(initial = '/'): Navigation {
   let paths: string[] = [initial];
-  let states: Object[] = [{}];
 
   let index = 0;
   let listeners: Listener[] = [];
@@ -38,17 +31,13 @@ function createNavigation(initial = '/'): Navigation {
       return index;
     },
 
-    get current() {
-      return {
-        path: paths[index],
-        state: states[index],
-      };
+    get location() {
+      return paths[index];
     },
 
     navigate: function(
       to: string,
       from: string,
-      state?: Object,
       options?: { latest?: boolean }
     ) {
       const path = paths[index];
@@ -72,19 +61,9 @@ function createNavigation(initial = '/'): Navigation {
         }
       }
 
-      if (!state) {
-        state = {};
-      }
-
       paths[index] = next;
-      states[index] = state;
 
-      const location = {
-        path: paths[index],
-        state: states[index],
-      };
-
-      listeners.forEach(l => l(location));
+      listeners.forEach(l => l(paths[index]));
     },
 
     listen: function(listener) {
@@ -102,11 +81,7 @@ function createNavigation(initial = '/'): Navigation {
       if (next) {
         index = offset;
 
-        const location = {
-          path: paths[index],
-          state: states[index],
-        };
-
+        const location = paths[index];
         listeners.forEach(l => l(location));
       }
     },

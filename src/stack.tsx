@@ -7,7 +7,6 @@ import { Pager } from './pager';
 interface ScreenContainerProps {
   onChange: (index: number) => void;
   index: number;
-  defaultIndex: number;
   children: any;
   width?: number;
   pan: Partial<PanGestureHandlerProperties>;
@@ -15,36 +14,22 @@ interface ScreenContainerProps {
 }
 class StackImpl extends React.Component<ScreenContainerProps & NavigatorState> {
   static defaultProps = {
-    defaultIndex: 0,
     pan: {
       enabled: true,
     },
   };
 
-  state = {
-    matchingIndex: this.props.defaultIndex,
-  };
-
-  componentDidUpdate(prevProps: ScreenContainerProps) {
-    const { index, defaultIndex } = this.props;
-    if (prevProps.index !== index) {
-      this.setState({ matchingIndex: index === -1 ? defaultIndex : index });
-    }
-  }
-
   isScreenActive = (childIndex: number) => {
-    const { matchingIndex } = this.state;
-    return childIndex <= matchingIndex;
+    const { index } = this.props;
+    return childIndex <= index;
   };
 
   render() {
-    const { children, style, pan, ...rest } = this.props;
+    const { children, style, index, pan, ...rest } = this.props;
 
     if (children.length === 0) {
       return null;
     }
-
-    const { matchingIndex } = this.state;
 
     return (
       <View style={[{ flex: 1 }, style]}>
@@ -52,11 +37,11 @@ class StackImpl extends React.Component<ScreenContainerProps & NavigatorState> {
           {...rest}
           pan={{
             ...pan,
-            enabled: pan.enabled && matchingIndex > 0,
+            enabled: pan.enabled && index > 0,
           }}
-          index={matchingIndex}
+          index={index}
           type="stack"
-          max={Children.count(children) - 1}
+          numberOfScreens={Children.count(children)}
         >
           {this.props.renderScreens(this.isScreenActive, this.props.children)}
         </Pager>
@@ -67,7 +52,6 @@ class StackImpl extends React.Component<ScreenContainerProps & NavigatorState> {
 
 interface StackProps extends PanGestureHandlerProperties {
   children: any;
-  defaultIndex?: number;
   style?: StyleProp<ViewStyle>;
   pan?: Partial<PanGestureHandlerProperties>;
   width?: number;

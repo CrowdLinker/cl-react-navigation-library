@@ -40,8 +40,25 @@
   </Tabbar>
 </Navigator>
 
-
+-- dynamically updating screen count in tabs / stack -- test this out
+-- tabbar / header views for use
 -- share pan value with tabbar / headers 
+
+-- switch component or unmount completely via some option?
 -- react-native-screens
--- pager component - changing child screen counts
--- hide intermediate screens 
+-- reduce consumers for navigation provider -- location and navigate is all we use?
+
+
+dynamic routes: 
+  cons:
+  - cant compute initial index, need a weird workaround 
+  - changes to screens will mess with navigator, messy updates to resolve 
+  
+
+  pros:
+  - nicer api 
+  - switching order of screens is easy and intuitive
+  - screens have a direct correlation to their path (instead of assumed in a routes[] prop)
+
+routes up top are easier to implement and will be less buggy
+we can think about passing a fn to children via navigator to somehow make it work dynamically, but is it worth it?

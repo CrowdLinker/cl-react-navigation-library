@@ -1,4 +1,4 @@
-import React, { cloneElement, Children } from 'react';
+import React from 'react';
 import { Navigation, createNavigation, NavigateOptions } from './navigation';
 import { BackHandler } from 'react-native';
 import { LocationBar } from './location-bar';
@@ -12,7 +12,7 @@ export const BasepathContext = React.createContext('/');
 export interface NavigationProps {
   initialPath?: string;
   showLocationBar?: boolean;
-  children: (navigation: Navigation) => React.ReactNode;
+  children: any;
 }
 
 class NavigationProviderImpl extends React.Component<
@@ -40,7 +40,7 @@ class NavigationProviderImpl extends React.Component<
 
     this.unlisten = this.state.listen(location => {
       if (this.mounted) {
-        this.setState({ current: location });
+        this.setState({ location });
       }
     });
 
@@ -54,14 +54,11 @@ class NavigationProviderImpl extends React.Component<
   }
 
   componentDidUpdate(prevProps: NavigationProps) {
-    const {
-      navigate,
-      current: { path },
-    } = this.state;
+    const { navigate, location } = this.state;
     const { initialPath } = this.props;
 
     if (prevProps.initialPath !== initialPath && initialPath) {
-      navigate(initialPath, path);
+      navigate(initialPath, location);
     }
   }
 
@@ -82,7 +79,7 @@ class NavigationProviderImpl extends React.Component<
         {children(this.state)}
         {showLocationBar && (
           <LocationBar
-            path={this.state.current.path}
+            path={this.state.location}
             navigate={this.state.navigate}
             back={this.state.back}
           />

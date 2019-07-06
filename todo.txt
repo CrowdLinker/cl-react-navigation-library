@@ -45,6 +45,3 @@
 -- react-native-screens
 -- pager component - changing child screen counts
 -- hide intermediate screens 
-
--- navigate() function should resolve the 'to' paths -- match dynamic parts w/ location 
-   to get the correct values?

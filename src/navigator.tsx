@@ -24,7 +24,7 @@ export const NavigatorContext = createContext<NavigatorState>({
   renderScreens: NOOP,
 });
 
-type NavigateFn = (to: string, state: Object, basepath?: string) => void;
+type NavigateFn = (to: string, state?: Object) => void;
 
 export const NavigateContext = createContext<NavigateFn>(NOOP);
 
@@ -100,17 +100,17 @@ class NavigatorImpl extends Component<NavigatorProps> {
     });
   };
 
-  navigate = (to: string, state: Object, basepath?: string) => {
+  navigate = (to: string, state?: Object) => {
     const {
-      location,
-      basepath: navigatorBasepath,
+      basepath,
       navigation: { navigate },
     } = this.props;
 
-    const query = getQuery(location);
+    if (state) {
+      this.setNavigatorState({ ...state });
+    }
 
-    this.setNavigatorState({ ...state, query });
-    navigate(to, basepath || navigatorBasepath);
+    navigate(to, basepath);
   };
 
   renderScreens = (

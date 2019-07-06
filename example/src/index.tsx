@@ -185,7 +185,7 @@ function ProfileStack({}) {
           </Link>
         </Screen>
         <Screen style={{ backgroundColor: 'red' }} path="two">
-          <Link to="../three">
+          <Link to="three">
             <Text>Next</Text>
           </Link>
         </Screen>

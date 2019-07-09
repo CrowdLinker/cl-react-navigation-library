@@ -9,6 +9,13 @@ interface ScreenProps {
   path: string;
 }
 
+export interface NavigatorScreen {
+  children?: any;
+  unmountOnExit?: boolean;
+  lazy?: boolean;
+  style?: StyleProp<ViewStyle>;
+}
+
 class Screen extends Component<ScreenProps> {
   state = {
     alive: this.props.active,
@@ -41,7 +48,7 @@ class Screen extends Component<ScreenProps> {
     const { alive } = this.state;
 
     return alive ? (
-      <View style={[{ flex: 1 }]}>
+      <View style={[{ flex: 1 }, this.child.props.style]}>
         <BasepathContext.Provider value={path}>
           {children}
         </BasepathContext.Provider>

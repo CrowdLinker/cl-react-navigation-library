@@ -18,6 +18,9 @@ import {
   Tabs,
   Stack,
   Pager,
+  Headers,
+  Header,
+  NavigatorScreen,
 } from 'react-navigation-library';
 
 import { FlatList } from 'react-native-gesture-handler';
@@ -59,37 +62,31 @@ function PagerTest() {
 function App() {
   return (
     <AppContainer>
-      <SafeAreaView />
-      {/* <Navigator
-        name="MAIN_NAV"
-        routes={['entry', 'app']}
-        showLocationBar
-        initialPath="/app/home/profile/2/three"
-      >
-        <Tabs name="MAIN_TABS">
-          <Entry path="entry" />
-          <Feeds path="app" />
+      <Navigator routes={['entry', 'app']} initialPath="/entry">
+        <Tabs>
+          <Entry unmountOnExit />
+          <Feeds unmountOnExit />
         </Tabs>
-      </Navigator> */}
+      </Navigator>
 
-      <PagerTest />
+      {/* <PagerTest /> */}
     </AppContainer>
   );
 }
 
-function Entry({  }: any) {
+function Entry({  }: NavigatorScreen) {
   return (
-    <Navigator name="ENTRY_NAV" routes={['login', '/', 'signup']}>
-      <Tabs name="ENTRY_TABS">
-        <Login path="login" />
-        <SelectMyScreen path="/" />
-        <Signup path="signup" />
+    <Navigator defaultIndex={1} routes={['login', '/', 'signup']}>
+      <Tabs>
+        <Login lazy />
+        <SelectMyScreen />
+        <Signup lazy />
       </Tabs>
     </Navigator>
   );
 }
 
-function SelectMyScreen({  }: any) {
+function SelectMyScreen({  }: NavigatorScreen) {
   return (
     <MyScreen
       style={{
@@ -110,7 +107,7 @@ function SelectMyScreen({  }: any) {
   );
 }
 
-function Signup({  }: any) {
+function Signup({  }: NavigatorScreen) {
   return (
     <MyScreen>
       <Text>Signup!</Text>
@@ -121,7 +118,7 @@ function Signup({  }: any) {
   );
 }
 
-function Login({  }: any) {
+function Login({  }: NavigatorScreen) {
   return (
     <MyScreen>
       <Text>Login!</Text>
@@ -134,7 +131,19 @@ function Login({  }: any) {
 
 function Feeds({  }: any) {
   return (
-    <Navigator name="FEEDS" routes={['home', 'news', 'popular']}>
+    <Navigator routes={['home', 'news', 'popular']}>
+      <Headers>
+        <Header>
+          <Text>Home</Text>
+        </Header>
+        <Header>
+          <Text>News</Text>
+        </Header>
+        <Header>
+          <Text>Popular</Text>
+        </Header>
+      </Headers>
+
       <Tabs>
         <Feed name="Home" path="home" />
         <Feed name="News" path="news" />
@@ -142,15 +151,13 @@ function Feeds({  }: any) {
       </Tabs>
 
       <Tabbar>
-        <View style={{ flex: 1 }}>
-          <Tab to="home">
-            <Text>Home</Text>
-          </Tab>
-        </View>
-        <Tab to="news">
+        <Tab to="home" activeStyle={{ borderWidth: 1 }}>
+          <Text>Home</Text>
+        </Tab>
+        <Tab to="news" activeStyle={{ borderWidth: 1 }}>
           <Text>News</Text>
         </Tab>
-        <Tab to="popular">
+        <Tab to="popular" activeStyle={{ borderWidth: 1 }}>
           <Text>Popular</Text>
         </Tab>
       </Tabbar>
@@ -215,19 +222,39 @@ function Profile({ item }: any) {
 function ProfileStack({}) {
   return (
     <Navigator routes={['/', 'two', 'three']}>
-      <SafeAreaView />
       <Stack>
-        <MyScreen style={{ backgroundColor: 'blue' }} path="/">
+        <MyScreen
+          style={{
+            backgroundColor: 'blue',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          path="/"
+        >
           <Link to="two">
             <Text>Next</Text>
           </Link>
         </MyScreen>
-        <MyScreen style={{ backgroundColor: 'red' }} path="two">
+        <MyScreen
+          style={{
+            backgroundColor: 'red',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          path="two"
+        >
           <Link to="three">
             <Text>Next</Text>
           </Link>
         </MyScreen>
-        <MyScreen style={{ backgroundColor: 'green' }} path="three">
+        <MyScreen
+          style={{
+            backgroundColor: 'green',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          path="three"
+        >
           <Text>3</Text>
         </MyScreen>
       </Stack>
@@ -239,7 +266,7 @@ const containerStyle: StyleProp<ViewStyle> = Platform.select({
   web: {
     width: 400,
     height: 500,
-    borderWidth: 1,
+
     marginVertical: 10,
     marginHorizontal: 'auto',
     overflow: 'hidden',

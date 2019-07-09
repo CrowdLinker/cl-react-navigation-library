@@ -11,14 +11,18 @@ interface HeadersProps {
 }
 
 function HeadersImpl({ activeIndex, children }: HeadersProps) {
-  if (!children[activeIndex]) {
-    return null;
-  }
+  const child = children[activeIndex];
 
-  return children[activeIndex];
+  return <View>{child}</View>;
 }
 
-function Headers({ children }: { children: any }) {
+function Headers({
+  children,
+  style,
+}: {
+  children: any;
+  style?: StyleProp<ViewStyle>;
+}) {
   return (
     <NavigatorContext.Consumer>
       {({ index }) => <HeadersImpl activeIndex={index}>{children}</HeadersImpl>}
@@ -45,7 +49,7 @@ function Header({ children, style }: HeaderProps) {
 
 function TabbarImpl({ activeIndex, style, children }: any) {
   return (
-    <View style={[style, styles.tabbar]}>
+    <View style={[styles.tabbar, style]}>
       {Children.map(children, (element: any, index: number) =>
         cloneElement(element, { active: index === activeIndex })
       )}
@@ -65,10 +69,20 @@ function Tabbar({ children, ...rest }: HeaderProps) {
   );
 }
 
-function Tab({ to, children, active, style }: any) {
+interface TabProps {
+  to: string;
+  children: any;
+  active?: boolean; // implicit prop
+  style?: StyleProp<ViewStyle>;
+  activeStyle?: StyleProp<ViewStyle>;
+}
+
+function Tab({ to, children, active, style, activeStyle }: TabProps) {
   return (
-    <Link to={to} style={[style, styles.tab]}>
-      {cloneElement(children, { active })}
+    <Link to={to} style={[styles.tab, style, active && activeStyle]}>
+      {Children.map(children, (element: any) =>
+        cloneElement(element, { active })
+      )}
     </Link>
   );
 }
@@ -101,6 +115,8 @@ const platformContainerStyles = Platform.select({
 
 const styles = StyleSheet.create({
   header: {
+    paddingHorizontal: 10,
+    flexDirection: 'row',
     paddingTop: STATUSBAR_HEIGHT,
     height: APPBAR_HEIGHT + STATUSBAR_HEIGHT,
     ...platformContainerStyles,
@@ -116,7 +132,10 @@ const styles = StyleSheet.create({
 
   tab: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
+export { STATUSBAR_HEIGHT, TABBAR_HEIGHT, APPBAR_HEIGHT, BOTTOM_SPACE };
 export { Header, Headers, Tabbar, Tab };

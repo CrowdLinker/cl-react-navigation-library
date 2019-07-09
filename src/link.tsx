@@ -24,11 +24,9 @@ function Link({ to, state, children, style, options }: LinkProps) {
                 navigate(to, state);
               });
             }}
-            style={[{ flex: 1 }, style]}
+            style={[style]}
           >
-            <View style={{ flex: 1 }} accessible>
-              {children}
-            </View>
+            <View accessible>{children}</View>
           </BorderlessButton>
         );
       }}

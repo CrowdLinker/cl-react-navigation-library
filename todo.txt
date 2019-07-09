@@ -40,9 +40,7 @@
   </Tabbar>
 </Navigator>
 
--- tabbar / header views for use
 -- share pan value with tabbar / headers 
--- types on route components 
 -- DOCS
 
 -- persist state on navigators e.g tabs -- save last matching index and path?

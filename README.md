@@ -1,51 +1,69 @@
 # react-navigation-library
 
-this library attempts to provide a similar api to @reach/router but with a native focus. the key difference between the two is that your screens are kept alive unless you specify the `unmountOnExit` flag to your screen. this is to maintain UI state that can't (easily) be computed, such as scroll position in a sibling tab view or nested scroll view. some other differences are that it handles transitions out of the box, and has an implementation of location akin to that found in browsers and react-router-native.
+this library aims to reduce the amount of overhead in setting up your app's navigation. at its core it manages how screens become focused, and provides little to no opinions about what or how you render your components. the API is component driven, meaning screens are focused dynamically, no static magic. it also supports many of the routing APIs found in `@reach/router`, and some of the core ideas/components of `react-navigation`
 
-having routing at the core of your app architecture has a lot of benefits. deep links are a lot easier to set up, navigating to specific screens while developing is a breeze, and your markup is a lot like what a web app might look like.
+# features
 
-its important to be able to render your subrouters in isolation when writing integration testing or styling nested screens. this is great because subrouters are independent of parent navigation architecture. like @reach/router, this library will render the first router in the tree as a provider, and it supports relative navigation paths, so subrouters should behave as expected when renderd in isolation.
+## routing
 
-there are no opinions about your components, so you can render whatever you like and this library will manage how they are focused. that being said, there are a few default components that are unique to native navigation and to individual platforms. these can be a pain to get consistent, so react-navigation-library ships with some helper containers to wrap around your custom header/tabbar components if you'd like.
+having routing at the core of your app architecture has a lot of benefits. deep links are a lot easier to set up, navigating to specific screens while developing is a breeze, and your markup is simpler to follow.
 
-this ships with a location bar that can be used as a development tool. it can be enabled by passing the `showLocationBar` flag to any of your routers to make navigation while developing a bit easier.
+this library ships with a `<Link />` component that is similar to @reach/router. it supports relative and absolute paths, so you can link to any part of your app from anywhere. additionally, each navigator provides relative routing to its children, and so your subnavigators can operate independently and in isolation.
 
-## Example
+this library also ships with a url bar that can be used to navigate to different parts of your application quickly while developing
 
-a basic navigation example can be found in the `/example` folder
+## components
+
+every navigator and screen you'll set up is a component and so it follows the same rules as any other react component tree out there, meaning passing props and state is entirely your concern. additionally, you have full control over how screens are mounted and unmounted via `lazy` and `unmountOnExit` flags, and therefore can control any sub navigator trees as well.
+
+## gestures
+
+panning and swiping behaviours are an important part of any native app, so these are provided to you out of the box. they can be configured to your app's needs or turned off completely. this library uses `react-native-gesture-handler` and `react-native-reanimated` in hopes of improving performance over the core animated / pan gesture APIs in react-native.
+
+# example
 
 ```
-import { View, Text } from 'react-native';
-import { Router, Link, RouteProps } from 'react-navigation-library';
+import React from 'react'
+import { Navigator, Tabs, Link } from 'react-navigation-library'
+import { Signup, Login } from './forms'
+import { Feeds } from './feeds'
+
+function Entry() {
+  return (
+    <Navigator routes={[ 'signup', '/', 'login' ]}>
+      <Tabs>
+        <Signup />
+        <SelectionScreen />
+        <Login />
+      </Tabs>
+    </Navigator>
+  )
+}
+
+function SelectionScreen() {
+  return (
+    <View style={{ flex: 1 }}>
+      <Link to='signup'>
+        <Text>Signup</Text>
+      </Link>
+
+      <Link to='login'>
+        <Text>Login</Text>
+      </Link>
+    </View>
+  )
+}
 
 function App() {
-  // the order of your routes is important because it determines how they are focused.
-  // <Login /> will come into focus from the left and <Signup /> will come into focus from the right
-
   return (
-    <AppContainer>
-
-      <Router showLocationBar initialPath="/signup?referral_code=abc123">
-
-        <Login path="login" unmountOnExit />
-        <Entry initialRoute />
-        <Signup path="signup" />
-
-      </Router>
-
-    </AppContainer>
-  );
+    <Navigator routes={[ 'entry',  'feeds' ]} initialPath='/entry'>
+      <Tabs>
+        <Entry unmountOnExit />
+        <Feeds />
+      </Tabs>
+    </Navigator>
+  )
 }
 
-function AppContainer({ children }: any) {
-  return (
-    <View
-      style={{
-        flex:  1,
-      }}
-    >
-      {children}
-    </View>
-  );
-}
+export default App
 ```

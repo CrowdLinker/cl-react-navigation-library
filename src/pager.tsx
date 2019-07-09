@@ -1,5 +1,5 @@
 import React, { Component, Children } from 'react';
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, LayoutChangeEvent, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import {
   PanGestureHandler,
@@ -72,10 +72,12 @@ class Pager extends Component<PagerProps> {
     width: screenWidth,
   };
 
+  width = new Value(this.props.width);
+
   constructor(props: PagerProps) {
     super(props);
 
-    const percentDragged = divide(this.dragX, props.width);
+    const percentDragged = divide(this.dragX, this.width);
     const threshold = 0.2;
     const isRight = cond(
       eq(this.type, PagerTypes.TABS),
@@ -154,12 +156,20 @@ class Pager extends Component<PagerProps> {
         this.maxIndex.setValue(this.props.numberOfScreens - 1);
       });
     }
+
+    if (prevProps.width !== this.props.width) {
+      requestAnimationFrame(() => {
+        this.width.setValue(this.props.width as any);
+      });
+    }
   }
 
   render() {
     const { children, width, type, pan } = this.props;
     return (
       <PanGestureHandler
+        activeOffsetX={[-20, 20]}
+        failOffsetY={[-20, 20]}
         {...pan}
         onGestureEvent={this.handleGesture}
         onHandlerStateChange={this.handleStateChange}
@@ -168,7 +178,7 @@ class Pager extends Component<PagerProps> {
           {Children.map(children, (element, index) => (
             <PagerView
               index={index}
-              initialIndex={this.props.index}
+              initialActiveIndex={this.props.index}
               activeIndex={this.index}
               width={width}
               gestureState={this.gestureState}
@@ -185,7 +195,7 @@ class Pager extends Component<PagerProps> {
   }
 }
 
-function getToValue(index, activeIndex, width, type) {
+function getInitialOffset(index, activeIndex, width, type) {
   const difference = index - activeIndex;
   const clamped = Math.max(
     type === 'tabs' ? -1 : -0.3,
@@ -195,13 +205,26 @@ function getToValue(index, activeIndex, width, type) {
   return toValue;
 }
 
-class PagerView extends Component<any> {
+interface PagerViewProps {
+  index: number;
+  initialActiveIndex: number;
+  activeIndex: Animated.Value<number>;
+  prevIndex: Animated.Value<number>;
+  width: number;
+  gestureState: Animated.Value<number>;
+  dragX: Animated.Value<number>;
+  type: 'tabs' | 'stack';
+}
+
+class PagerView extends Component<PagerViewProps> {
   clock = new Clock();
 
+  width = new Value(this.props.width);
+
   dx = new Value(
-    getToValue(
+    getInitialOffset(
       this.props.index,
-      this.props.initialIndex,
+      this.props.initialActiveIndex,
       this.props.width,
       this.props.type
     )
@@ -221,8 +244,8 @@ class PagerView extends Component<any> {
     if (props.type === 'tabs') {
       const clamped = max(-1, min(difference, 1));
 
-      const absoluteOffset = multiply(difference, this.props.width);
-      const toValue = multiply(this.props.width, clamped);
+      const absoluteOffset = multiply(difference, this.width);
+      const toValue = multiply(this.width, clamped);
 
       const indexChange = abs(sub(props.prevIndex, props.activeIndex));
       const isIntermediateScreen = and(
@@ -255,7 +278,7 @@ class PagerView extends Component<any> {
       ]) as any;
     } else {
       const clamped = max(-0.3, min(difference, 1));
-      const toValue = multiply(this.props.width, clamped);
+      const toValue = multiply(this.width, clamped);
 
       this.translateX = block([
         onChange(this.props.dragX, []),
@@ -319,6 +342,14 @@ class PagerView extends Component<any> {
     ]);
   };
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.width !== this.props.width) {
+      requestAnimationFrame(() => {
+        this.width.setValue(this.props.width as any);
+      });
+    }
+  }
+
   render() {
     const { children } = this.props;
 
@@ -335,4 +366,43 @@ class PagerView extends Component<any> {
   }
 }
 
+class PagerContainer extends React.Component<PagerProps> {
+  static defaultProps = {
+    width: screenWidth,
+  };
+
+  state = {
+    width: 0,
+    height: 0,
+  };
+
+  handleLayout = (e: LayoutChangeEvent) => {
+    const { height, width } = e.nativeEvent.layout;
+
+    if (this.state.width === width && this.state.height === height) {
+      return;
+    }
+
+    this.setState({
+      height,
+      width,
+    });
+  };
+
+  render() {
+    const { children, ...rest } = this.props;
+    return (
+      <View
+        style={{ flex: 1, overflow: 'hidden' }}
+        onLayout={this.handleLayout}
+      >
+        <Pager {...rest} width={this.state.width}>
+          {children}
+        </Pager>
+      </View>
+    );
+  }
+}
+
+export default PagerContainer;
 export { Pager };

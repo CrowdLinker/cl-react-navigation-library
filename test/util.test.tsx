@@ -22,4 +22,6 @@ test('resolve fn()', () => {
   expect(
     resolve(`../../profile/../profile/:id/two`, `/app/home/profile/0`, location)
   ).toEqual(`/app/home/profile/0/two`);
+
+  expect(resolve(`../../`, `/leafs/p/:slug`, location)).toEqual(`/leafs`);
 });

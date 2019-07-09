@@ -29,31 +29,28 @@ function PagerTest() {
     setActiveIndex(index);
   }
 
+  const children = Array.from({ length: activeIndex + 2 });
+
   return (
     <View style={{ flex: 1 }}>
       <Pager
         index={activeIndex}
         onChange={handleChange}
-        numberOfScreens={4}
-        type="tabs"
+        numberOfScreens={children.length}
+        type="stack"
       >
-        <MyScreen style={{ backgroundColor: 'white' }}>
-          <Text>Index 0</Text>
-        </MyScreen>
-        <MyScreen style={{ backgroundColor: 'white' }}>
-          <Text>Index 1</Text>
-        </MyScreen>
-        <MyScreen style={{ backgroundColor: 'white' }}>
-          <Text>Index 2</Text>
-        </MyScreen>
-        <MyScreen style={{ backgroundColor: 'white' }}>
-          <Text>Index 3</Text>
-        </MyScreen>
+        {children.map((c, i) => {
+          return (
+            <MyScreen key={i} style={{ backgroundColor: 'white' }}>
+              <Text>{`Index: ${i}`}</Text>
+            </MyScreen>
+          );
+        })}
       </Pager>
 
       <View style={{ height: 100, width: '100%' }}>
-        <Button title="Inc" onPress={() => setActiveIndex(activeIndex + 2)} />
-        <Button title="Dec" onPress={() => setActiveIndex(activeIndex - 2)} />
+        <Button title="Inc" onPress={() => setActiveIndex(activeIndex + 1)} />
+        <Button title="Dec" onPress={() => setActiveIndex(activeIndex - 1)} />
       </View>
     </View>
   );
@@ -63,7 +60,7 @@ function App() {
   return (
     <AppContainer>
       <SafeAreaView />
-      <Navigator
+      {/* <Navigator
         name="MAIN_NAV"
         routes={['entry', 'app']}
         showLocationBar
@@ -73,9 +70,9 @@ function App() {
           <Entry path="entry" />
           <Feeds path="app" />
         </Tabs>
-      </Navigator>
+      </Navigator> */}
 
-      {/* <PagerTest /> */}
+      <PagerTest />
     </AppContainer>
   );
 }

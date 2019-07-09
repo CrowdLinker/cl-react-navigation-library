@@ -2,7 +2,7 @@ import React, { Component, Children } from 'react';
 import { NavigatorContext, NavigatorState } from './navigator';
 import { PanGestureHandlerProperties } from 'react-native-gesture-handler';
 import { StyleProp, ViewStyle, View } from 'react-native';
-import { Pager } from './pager';
+import PagerContainer, { Pager } from './pager';
 
 interface ScreenContainerProps {
   onChange: (index: number) => void;
@@ -33,7 +33,7 @@ class StackImpl extends React.Component<ScreenContainerProps & NavigatorState> {
 
     return (
       <View style={[{ flex: 1 }, style]}>
-        <Pager
+        <PagerContainer
           {...rest}
           pan={{
             ...pan,
@@ -44,7 +44,7 @@ class StackImpl extends React.Component<ScreenContainerProps & NavigatorState> {
           numberOfScreens={Children.count(children)}
         >
           {this.props.renderScreens(this.isScreenActive, this.props.children)}
-        </Pager>
+        </PagerContainer>
       </View>
     );
   }

@@ -2,7 +2,7 @@ import React, { Component, Children } from 'react';
 import { View, StyleProp, ViewStyle } from 'react-native';
 import { NavigatorContext, NavigatorState } from './navigator';
 import { PanGestureHandlerProperties } from 'react-native-gesture-handler';
-import { Pager } from './pager';
+import PagerContainer, { Pager } from './pager';
 
 interface ScreenContainerProps {
   onChange: (index: number) => void;
@@ -33,14 +33,14 @@ class TabsImpl extends React.Component<ScreenContainerProps & NavigatorState> {
     }
 
     return (
-      <Pager
+      <PagerContainer
         {...rest}
         index={index}
         type="tabs"
         numberOfScreens={Children.count(children)}
       >
         {this.props.renderScreens(this.isScreenActive, children)}
-      </Pager>
+      </PagerContainer>
     );
   }
 }

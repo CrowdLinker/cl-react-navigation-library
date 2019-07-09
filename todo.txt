@@ -40,14 +40,14 @@
   </Tabbar>
 </Navigator>
 
--- dynamically updating screen count in tabs / stack -- test this out
 -- tabbar / header views for use
 -- share pan value with tabbar / headers 
+-- types on route components 
+-- DOCS
 
--- switch component or unmount completely via some option?
+-- persist state on navigators e.g tabs -- save last matching index and path?
 -- react-native-screens
 -- reduce consumers for navigation provider -- location and navigate is all we use?
-
 
 dynamic routes: 
   cons:

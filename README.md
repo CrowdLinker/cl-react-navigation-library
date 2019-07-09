@@ -1,26 +1,51 @@
 # react-navigation-library
 
-this library aims to reduce the amount of overhead in setting up your app's navigation. at its core it manages how screens become focused, and provides little to no opinions about what or how you render your components. the API is component driven, meaning screens are focused dynamically, no static magic. it also supports many of the routing APIs found in `@reach/router`, and some of the core ideas/components of `react-navigation`
+A component-driven React Native navigation library.
 
-# features
+- [Example project](https://github.com/CrowdLinker/react-navigation-library/blob/master/example/src/index.tsx)
 
-## routing
+# Features
 
-having routing at the core of your app architecture has a lot of benefits. deep links are a lot easier to set up, navigating to specific screens while developing is a breeze, and your markup is simpler to follow.
+## Routing
 
-this library ships with a `<Link />` component that is similar to @reach/router. it supports relative and absolute paths, so you can link to any part of your app from anywhere. additionally, each navigator provides relative routing to its children, and so your subnavigators can operate independently and in isolation.
+- every screen is accessible by a route that you define
+- routes are similar in API to `@reach/router` and `react-router`
+- supports queries and params
+- `<Link />` component supports relative and absolute paths
+- location bar to navigate like in a browser while developing
 
-this library also ships with a url bar that can be used to navigate to different parts of your application quickly while developing
+**Why?**
 
-## components
+Having routing at the core of your app architecture has a lot of benefits:
 
-every navigator and screen you'll set up is a component and so it follows the same rules as any other react component tree out there, meaning passing props and state is entirely your concern. additionally, you have full control over how screens are mounted and unmounted via `lazy` and `unmountOnExit` flags, and therefore can control any sub navigator trees as well.
+- deep links are a lot easier to set up
+- navigating to specific screens while developing is a breeze
+- your markup is simpler to follow
+- rendering navigators in isolation is extremely useful while developing / running integration tests
 
-## gestures
+## Component-driven
 
-panning and swiping behaviours are an important part of any native app, so these are provided to you out of the box. they can be configured to your app's needs or turned off completely. this library uses `react-native-gesture-handler` and `react-native-reanimated` in hopes of improving performance over the core animated / pan gesture APIs in react-native.
+- components are provided to logically structure and manage the focus of your app
+- no static configurations, everything is dynamically rendered
+- no opinions about where or how you render components, it's all determined by your markup
+- granular control of mounting and unmounting based on focus
 
-# example
+**Why?**
+
+- familiar behaviour, its like any other react tree you've worked with
+- passing props and state is entirely up to you
+- more flexibility and control over what your app looks like because you're using your own components
+
+## Gestures
+
+- pan and swipe gestures to navigate between screens
+- configurable via props
+
+**Why?**
+
+Panning and swiping behaviours are an important part of any native app, so these are provided to you out of the box. They can be configured to your app's needs or turned off completely. This library uses `react-native-gesture-handler` and `react-native-reanimated` in hopes of improving performance over the core animated / pan gesture APIs in react-native.
+
+# Example
 
 ```
 import React from 'react'
@@ -67,3 +92,5 @@ function App() {
 
 export default App
 ```
+
+# API Reference

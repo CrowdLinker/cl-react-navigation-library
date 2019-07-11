@@ -46,10 +46,11 @@ function Index({ routes }: any) {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ alignItems: 'center' }}
+        contentContainerStyle={{ alignItems: 'center', paddingTop: 20 }}
       >
         {rest.map((route: string) => (
           <Link
+            key={route}
             to={route}
             style={{ borderWidth: 1, borderRadius: 4, padding: 10 }}
           >

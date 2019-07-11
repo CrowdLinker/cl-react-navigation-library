@@ -12,7 +12,7 @@ import { TextInput, BorderlessButton } from 'react-native-gesture-handler';
 
 function Entry({  }: NavigatorScreen) {
   return (
-    <Navigator routes={['signup', '/', 'login']}>
+    <Navigator routes={['signup', '/', 'login']} defaultIndex={1}>
       {({ navigate, state }: any) => (
         <>
           <Headers>

@@ -6412,10 +6412,10 @@ react-native-gesture-handler@^1.3.0:
     invariant "^2.2.2"
     prop-types "^15.5.10"
 
-react-native-pager-component@^0.0.7:
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/react-native-pager-component/-/react-native-pager-component-0.0.7.tgz#83779e71446e9c07133779b0f3f7f8fd4af6bb2a"
-  integrity sha512-lae3phcdKk/C7IEaGE7BUdSj+vjuJQVhAdU3dxKt73gkLBH+xcV5oTObeV7RgMzpWyk0c+5V7EtCXewtEtnraw==
+react-native-pager-component@^0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/react-native-pager-component/-/react-native-pager-component-0.0.8.tgz#46bf1a3a178033ee45f4201531b236ed989a0a9d"
+  integrity sha512-1djt9EXzhvKDY73LUFuxH0C38jhPjgH1dT7WpnmsnEQ0PTqlYUKbTlQF8EUvxTiLr/vTGTUGoiKkbu8ddzJXGQ==
 
 react-native-reanimated@^1.1.0:
   version "1.1.0"

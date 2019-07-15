@@ -7,7 +7,13 @@ export const NavigationContext = React.createContext<Navigation | undefined>(
   undefined
 );
 
+const NOOP = () => {};
+
 export const BasepathContext = React.createContext('/');
+
+export const LocationContext = React.createContext('');
+export const RootNavigateContext = React.createContext(NOOP as any);
+export const BackContext = React.createContext(NOOP as any);
 
 export interface NavigationProps {
   initialPath?: string;
@@ -75,31 +81,36 @@ class NavigationProviderImpl extends React.Component<
     const { children, showLocationBar } = this.props;
 
     return (
-      <NavigationContext.Provider value={this.state}>
-        {children(this.state)}
-        {showLocationBar && (
-          <LocationBar
-            path={this.state.location}
-            navigate={this.state.navigate}
-            back={this.state.back}
-          />
-        )}
-      </NavigationContext.Provider>
+      <RootNavigateContext.Provider value={this.state.navigate}>
+        <BackContext.Provider value={this.state.back}>
+          <LocationContext.Provider value={this.state.location}>
+            {children}
+
+            {showLocationBar && (
+              <LocationBar
+                path={this.state.location}
+                navigate={this.state.navigate}
+                back={this.state.back}
+              />
+            )}
+          </LocationContext.Provider>
+        </BackContext.Provider>
+      </RootNavigateContext.Provider>
     );
   }
 }
 
 function NavigationProvider(props: NavigationProps) {
   return (
-    <NavigationContext.Consumer>
-      {navigation => {
-        if (!navigation) {
+    <LocationContext.Consumer>
+      {location => {
+        if (!location) {
           return <NavigationProviderImpl {...props} />;
         }
 
-        return props.children(navigation);
+        return props.children;
       }}
-    </NavigationContext.Consumer>
+    </LocationContext.Consumer>
   );
 }
 

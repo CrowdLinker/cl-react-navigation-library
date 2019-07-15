@@ -3,8 +3,11 @@ import {
   BasepathContext,
   NavigationProvider,
   NavigationProps,
+  LocationContext,
+  RootNavigateContext,
+  BackContext,
 } from './navigation-provider';
-import { Navigation } from './navigation';
+import { Back } from './navigation';
 import { Screen } from './screen';
 
 const NOOP = () => {};
@@ -40,7 +43,8 @@ interface NavigatorImplProps {
   location: string;
   routes: string[];
   defaultIndex: number;
-  navigation: Navigation;
+  navigate: NavigateFn;
+  back: Back;
   initialState: Object;
 }
 
@@ -51,7 +55,7 @@ class NavigatorImpl extends Component<NavigatorImplProps, NavigatorState> {
 
     // is not focused so we shouldnt push this view
     if (activeIndex !== -1 && activeIndex !== nextIndex) {
-      const next = segmentize(routes[nextIndex]).join('/');
+      const next = routes[nextIndex];
 
       if (next) {
         const pathname = getPathname(next, basepath);
@@ -99,10 +103,7 @@ class NavigatorImpl extends Component<NavigatorImplProps, NavigatorState> {
   };
 
   navigate = (to: string, state?: Object) => {
-    const {
-      basepath,
-      navigation: { navigate },
-    } = this.props;
+    const { basepath, navigate } = this.props;
 
     if (state) {
       this.setNavigatorState({ ...state });
@@ -156,7 +157,7 @@ class NavigatorImpl extends Component<NavigatorImplProps, NavigatorState> {
   }
 
   render() {
-    const { children, location, navigation } = this.props;
+    const { children, location, back } = this.props;
 
     return (
       <NavigateContext.Provider value={this.navigate}>
@@ -166,7 +167,7 @@ class NavigatorImpl extends Component<NavigatorImplProps, NavigatorState> {
                 activeIndex: this.state.activeIndex,
                 state: this.state.state,
                 navigate: this.navigate,
-                back: navigation.back,
+                back: back,
                 location,
               })
             : children}
@@ -193,18 +194,29 @@ function Navigator({
     <BasepathContext.Consumer>
       {(basepath = '/') => (
         <NavigationProvider {...rest}>
-          {navigation => (
-            <NavigatorImpl
-              routes={routes}
-              defaultIndex={defaultIndex}
-              initialState={initialState}
-              location={navigation ? navigation.location : '/'}
-              navigation={navigation}
-              basepath={basepath}
-            >
-              {children}
-            </NavigatorImpl>
-          )}
+          <LocationContext.Consumer>
+            {location => (
+              <BackContext.Consumer>
+                {back => (
+                  <RootNavigateContext.Consumer>
+                    {navigate => (
+                      <NavigatorImpl
+                        routes={routes}
+                        defaultIndex={defaultIndex}
+                        initialState={initialState}
+                        location={location}
+                        navigate={navigate}
+                        back={back}
+                        basepath={basepath}
+                      >
+                        {children}
+                      </NavigatorImpl>
+                    )}
+                  </RootNavigateContext.Consumer>
+                )}
+              </BackContext.Consumer>
+            )}
+          </LocationContext.Consumer>
         </NavigationProvider>
       )}
     </BasepathContext.Consumer>

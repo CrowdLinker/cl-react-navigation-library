@@ -2,15 +2,12 @@ import React, { Component, Children } from 'react';
 import { View, StyleProp, ViewStyle } from 'react-native';
 import { NavigatorContext, NavigatorState } from './navigator';
 import { PanGestureHandlerProperties } from 'react-native-gesture-handler';
-import PagerContainer, { Pager } from './pager';
+import { Pager } from 'react-native-pager-component';
 
 interface ScreenContainerProps {
-  onChange: (index: number) => void;
-  index: number;
   children: any;
-  width?: number;
-  pan: Partial<PanGestureHandlerProperties>;
   style?: StyleProp<ViewStyle>;
+  pan: Partial<PanGestureHandlerProperties>;
 }
 
 class TabsImpl extends React.Component<ScreenContainerProps & NavigatorState> {
@@ -20,27 +17,26 @@ class TabsImpl extends React.Component<ScreenContainerProps & NavigatorState> {
     },
   };
 
-  isScreenActive = (childIndex: number, childElement: any) => {
-    const { index } = this.props;
-    return childIndex === index;
+  isScreenActive = (childIndex: number) => {
+    const { activeIndex } = this.props;
+    return childIndex === activeIndex;
   };
 
   render() {
-    const { children, index, ...rest } = this.props;
+    const { children, renderScreens, ...rest } = this.props;
 
-    if (children.length === 0) {
+    const numberOfScreens = Children.count(children);
+
+    if (numberOfScreens === 0) {
       return null;
     }
 
     return (
-      <PagerContainer
-        {...rest}
-        index={index}
-        type="tabs"
-        numberOfScreens={Children.count(children)}
-      >
-        {this.props.renderScreens(this.isScreenActive, children)}
-      </PagerContainer>
+      <Pager {...rest} numberOfScreens={numberOfScreens}>
+        {renderScreens
+          ? renderScreens(this.isScreenActive, children)
+          : children}
+      </Pager>
     );
   }
 }

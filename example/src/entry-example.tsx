@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import {
   Navigator,
   Tabs,
@@ -12,7 +12,7 @@ import { TextInput, BorderlessButton } from 'react-native-gesture-handler';
 
 function Entry({  }: NavigatorScreen) {
   return (
-    <Navigator routes={['signup', '/', 'login']} defaultIndex={1}>
+    <Navigator routes={['signup-form', '/', 'login-form']} defaultIndex={1}>
       {({ navigate, state }: any) => (
         <>
           <Headers>
@@ -26,12 +26,13 @@ function Entry({  }: NavigatorScreen) {
               <Text style={styles.title}>Login</Text>
             </Header>
           </Headers>
-
-          <Tabs>
-            <Signup navigate={navigate} />
-            <SelectionScreen email={state.email} />
-            <Login navigate={navigate} />
-          </Tabs>
+          <SafeAreaView style={{ flex: 1 }}>
+            <Tabs>
+              <Signup navigate={navigate} />
+              <SelectionScreen email={state.email} />
+              <Login navigate={navigate} />
+            </Tabs>
+          </SafeAreaView>
         </>
       )}
     </Navigator>
@@ -74,10 +75,10 @@ function SelectionScreen({ email = '' }: any) {
       )}
 
       <View style={{ flex: 1, alignItems: 'center' }}>
-        <Link to="signup" style={styles.button}>
+        <Link to="signup-form" style={styles.button}>
           <Text>Signup</Text>
         </Link>
-        <Link to="login" style={styles.button}>
+        <Link to="login-form" style={styles.button}>
           <Text>Login</Text>
         </Link>
       </View>

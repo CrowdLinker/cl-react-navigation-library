@@ -10,28 +10,24 @@ import {
 } from 'react-native';
 import { Entry } from './entry-example';
 import { ScrollView } from 'react-native-gesture-handler';
-import { Link, Navigator, Tabs, BOTTOM_SPACE } from 'react-navigation-library';
+import {
+  Link,
+  Navigator,
+  Tabs,
+  Stack,
+  BOTTOM_SPACE,
+} from 'react-navigation-library';
 
 function App() {
   const routes = ['/', '/login'];
 
   return (
     <AppContainer>
-      <Navigator routes={routes}>
-        {({ index }: any) => (
-          <>
-            <Tabs pan={{ enabled: false }}>
-              <Index routes={routes} />
-              <Entry unmountOnExit />
-            </Tabs>
-
-            {index !== 0 && (
-              <Link to="/" style={styles.homeButton}>
-                <Text style={styles.title}>Return Home</Text>
-              </Link>
-            )}
-          </>
-        )}
+      <Navigator routes={routes} showLocationBar>
+        <Tabs>
+          <Index routes={routes} />
+          <Entry />
+        </Tabs>
       </Navigator>
     </AppContainer>
   );
@@ -51,7 +47,7 @@ function Index({ routes }: any) {
         {rest.map((route: string) => (
           <Link
             key={route}
-            to={route}
+            to={`${route}`}
             style={{ borderWidth: 1, borderRadius: 4, padding: 10 }}
           >
             <Text>{route}</Text>

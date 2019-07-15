@@ -10,9 +10,10 @@ import { Screen } from './screen';
 const NOOP = () => {};
 
 export interface NavigatorState {
-  index: number;
+  activeIndex: number;
   onChange: (nextIndex: number) => void;
   state: Object;
+  defaultIndex: number;
   renderScreens: (
     isScreenActive: (childIndex: number, childElement: any) => boolean,
     children: any
@@ -20,8 +21,11 @@ export interface NavigatorState {
 }
 
 export const NavigatorContext = createContext<NavigatorState>({
-  index: 0,
-  onChange: NOOP,
+  activeIndex: 0,
+  defaultIndex: 0,
+  onChange: () => {
+    throw new Error('onChange not set!');
+  },
   state: {},
   renderScreens: NOOP,
 });
@@ -40,29 +44,27 @@ interface NavigatorImplProps {
   initialState: Object;
 }
 
-class NavigatorImpl extends Component<NavigatorImplProps> {
+class NavigatorImpl extends Component<NavigatorImplProps, NavigatorState> {
   handleChange = (nextIndex: number) => {
     const { location, basepath, routes } = this.props;
-
-    const { index } = this.state;
+    const { activeIndex } = this.state;
 
     // is not focused so we shouldnt push this view
-    if (index !== -1 && index !== nextIndex) {
-      const next = routes[nextIndex];
+    if (activeIndex !== -1 && activeIndex !== nextIndex) {
+      const next = segmentize(routes[nextIndex]).join('/');
 
       if (next) {
         const pathname = getPathname(next, basepath);
         const nextPath = resolveParams(pathname, location);
-
         this.navigate(nextPath);
       }
     }
   };
 
   getActiveIndex = () => {
-    const { basepath, location, routes, defaultIndex } = this.props;
+    const { basepath, location, routes } = this.props;
 
-    let activeIndex = defaultIndex;
+    let activeIndex = -1;
 
     for (let i = 0; i < routes.length; i++) {
       const path = routes[i];
@@ -117,7 +119,7 @@ class NavigatorImpl extends Component<NavigatorImplProps> {
     const query = getQuery(location);
 
     return Children.map(children, (element: any, index: number) => {
-      const path = routes[index];
+      const path = segmentize(routes[index]).join('/');
       const pathname = getPathname(path || '/', basepath);
       const active = isScreenActive(index, element);
       const params = getParams(pathname, location);
@@ -132,11 +134,12 @@ class NavigatorImpl extends Component<NavigatorImplProps> {
 
   static defaultProps = {
     initialState: {},
-    defaultIndex: -1,
+    defaultIndex: 0,
   };
 
   state = {
-    index: this.getActiveIndex(),
+    activeIndex: this.getActiveIndex(),
+    defaultIndex: this.props.defaultIndex,
     onChange: this.handleChange,
     state: this.props.initialState,
     renderScreens: this.renderScreens,
@@ -144,10 +147,10 @@ class NavigatorImpl extends Component<NavigatorImplProps> {
 
   componentDidUpdate(prevProps: NavigatorImplProps) {
     if (prevProps.location !== this.props.location) {
-      const index = this.getActiveIndex();
+      const activeIndex = this.getActiveIndex();
 
-      if (index !== this.state.index) {
-        this.setState({ index });
+      if (activeIndex !== this.state.activeIndex) {
+        this.setState({ activeIndex });
       }
     }
   }
@@ -160,7 +163,7 @@ class NavigatorImpl extends Component<NavigatorImplProps> {
         <NavigatorContext.Provider value={this.state}>
           {typeof children === 'function'
             ? children({
-                index: this.state.index,
+                activeIndex: this.state.activeIndex,
                 state: this.state.state,
                 navigate: this.navigate,
                 back: navigation.back,
@@ -289,6 +292,11 @@ function match(pathname: string, location: string): boolean {
   }
 
   return match;
+}
+
+function segmentize(uri: string): string[] {
+  // strip starting/ending slashes
+  return uri.replace(/(^\/+|\/+$)/g, '').split('/');
 }
 
 function getParams(

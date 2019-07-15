@@ -2,15 +2,11 @@ import React, { Component, Children } from 'react';
 import { NavigatorContext, NavigatorState } from './navigator';
 import { PanGestureHandlerProperties } from 'react-native-gesture-handler';
 import { StyleProp, ViewStyle, View } from 'react-native';
-import PagerContainer, { Pager } from './pager';
+import { Pager } from 'react-native-pager-component';
 
 interface ScreenContainerProps {
-  onChange: (index: number) => void;
-  index: number;
   children: any;
-  width?: number;
   pan: Partial<PanGestureHandlerProperties>;
-  style?: StyleProp<ViewStyle>;
 }
 class StackImpl extends React.Component<ScreenContainerProps & NavigatorState> {
   static defaultProps = {
@@ -20,32 +16,36 @@ class StackImpl extends React.Component<ScreenContainerProps & NavigatorState> {
   };
 
   isScreenActive = (childIndex: number) => {
-    const { index } = this.props;
-    return childIndex <= index;
+    const { activeIndex } = this.props;
+    return childIndex <= activeIndex;
   };
 
   render() {
-    const { children, style, index, pan, ...rest } = this.props;
+    const { children, activeIndex, renderScreens, pan, ...rest } = this.props;
 
-    if (children.length === 0) {
+    const numberOfScreens = Children.count(children);
+
+    if (numberOfScreens === 0) {
       return null;
     }
 
     return (
-      <View style={[{ flex: 1 }, style]}>
-        <PagerContainer
-          {...rest}
-          pan={{
-            ...pan,
-            enabled: pan.enabled && index > 0,
-          }}
-          index={index}
-          type="stack"
-          numberOfScreens={Children.count(children)}
-        >
-          {this.props.renderScreens(this.isScreenActive, this.props.children)}
-        </PagerContainer>
-      </View>
+      <Pager
+        {...rest}
+        pan={{
+          ...pan,
+          enabled: pan.enabled && activeIndex > 0,
+        }}
+        activeIndex={activeIndex}
+        numberOfScreens={numberOfScreens}
+        clamp={{
+          left: 0.4,
+        }}
+      >
+        {renderScreens
+          ? renderScreens(this.isScreenActive, children)
+          : children}
+      </Pager>
     );
   }
 }

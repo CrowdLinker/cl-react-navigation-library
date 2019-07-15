@@ -26,13 +26,11 @@ function Entry({  }: NavigatorScreen) {
               <Text style={styles.title}>Login</Text>
             </Header>
           </Headers>
-          <SafeAreaView style={{ flex: 1 }}>
-            <Tabs>
-              <Signup navigate={navigate} />
-              <SelectionScreen email={state.email} />
-              <Login navigate={navigate} />
-            </Tabs>
-          </SafeAreaView>
+          <Tabs>
+            <Signup navigate={navigate} />
+            <SelectionScreen email={state.email} />
+            <Login navigate={navigate} />
+          </Tabs>
         </>
       )}
     </Navigator>

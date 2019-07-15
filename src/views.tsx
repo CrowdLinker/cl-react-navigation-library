@@ -8,24 +8,23 @@ import { Link } from './link';
 interface HeadersProps {
   activeIndex: number;
   children: any;
+  defaultIndex: number;
 }
 
-function HeadersImpl({ activeIndex, children }: HeadersProps) {
-  const child = children[activeIndex];
+function HeadersImpl({ activeIndex, defaultIndex, children }: HeadersProps) {
+  const child = children[activeIndex] || children[defaultIndex];
 
   return <View>{child}</View>;
 }
 
-function Headers({
-  children,
-  style,
-}: {
-  children: any;
-  style?: StyleProp<ViewStyle>;
-}) {
+function Headers({ children }: { children: any }) {
   return (
     <NavigatorContext.Consumer>
-      {({ index }) => <HeadersImpl activeIndex={index}>{children}</HeadersImpl>}
+      {({ activeIndex, defaultIndex }) => (
+        <HeadersImpl activeIndex={activeIndex} defaultIndex={defaultIndex}>
+          {children}
+        </HeadersImpl>
+      )}
     </NavigatorContext.Consumer>
   );
 }
@@ -37,13 +36,13 @@ interface HeaderProps {
 
 function Header({ children, style }: HeaderProps) {
   return (
-    <NavigationContext.Consumer>
-      {navigation => (
+    <NavigatorContext.Consumer>
+      {navigator => (
         <View style={[styles.header, style]}>
-          {cloneElement(children, navigation)}
+          {cloneElement(children, navigator)}
         </View>
       )}
-    </NavigationContext.Consumer>
+    </NavigatorContext.Consumer>
   );
 }
 
@@ -60,8 +59,8 @@ function TabbarImpl({ activeIndex, style, children }: any) {
 function Tabbar({ children, ...rest }: HeaderProps) {
   return (
     <NavigatorContext.Consumer>
-      {({ index }) => (
-        <TabbarImpl activeIndex={index} {...rest}>
+      {({ activeIndex }) => (
+        <TabbarImpl activeIndex={activeIndex} {...rest}>
           {children}
         </TabbarImpl>
       )}

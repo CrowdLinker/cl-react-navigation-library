@@ -66,6 +66,6 @@
     "typescript": "^3.5.2"
   },
   "dependencies": {
-    "react-native-pager-component": "^0.0.8"
+    "react-native-pager-component": "^0.0.9"
   }
 }

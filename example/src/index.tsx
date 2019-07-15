@@ -10,13 +10,7 @@ import {
 } from 'react-native';
 import { Entry } from './entry-example';
 import { ScrollView } from 'react-native-gesture-handler';
-import {
-  Link,
-  Navigator,
-  Tabs,
-  Stack,
-  BOTTOM_SPACE,
-} from 'react-navigation-library';
+import { Link, Navigator, Tabs, BOTTOM_SPACE } from 'react-navigation-library';
 
 function App() {
   const routes = ['/', '/login'];
@@ -24,7 +18,7 @@ function App() {
   return (
     <AppContainer>
       <Navigator routes={routes} showLocationBar>
-        <Tabs>
+        <Tabs pan={{ enabled: false }}>
           <Index routes={routes} />
           <Entry />
         </Tabs>

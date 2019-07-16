@@ -69,6 +69,7 @@ There are additional steps to setting these up:
 
 ```
 import React from 'react'
+import { View } from 'react-native'
 import { Navigator, Tabs, Link } from 'react-navigation-library'
 import { Signup, Login } from './forms'
 import { Feeds } from './feeds'

@@ -20,7 +20,7 @@ Having routing at the core of your app architecture has a lot of benefits:
 
 - deep links are a lot easier to set up
 - navigating to specific screens while developing is a breeze
-- your markup is simpler to follow
+- your navigation logic is simpler to follow
 - rendering navigators in isolation is extremely useful while developing / running integration tests
 
 ## Component-driven

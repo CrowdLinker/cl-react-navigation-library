@@ -32,6 +32,7 @@ Having routing at the core of your app architecture has a lot of benefits:
 
 **Why?**
 
+- composing navigators inside other navigators is much easier to setup
 - familiar behaviour, its like any other react tree you've worked with
 - passing props and state is entirely up to you
 - more flexibility and control over what your app looks like because you're using your own components
@@ -43,7 +44,10 @@ Having routing at the core of your app architecture has a lot of benefits:
 
 **Why?**
 
-Panning and swiping behaviours are an important part of any native app, so these are provided to you out of the box. They can be configured to your app's needs or turned off completely. This library uses `react-native-gesture-handler` and `react-native-reanimated` in hopes of improving performance over the core animated / pan gesture APIs in react-native.
+- panning and swiping behaviours are too important to ignore
+- they can be configured to your app's needs or turned off via navigator props 
+
+This library uses `react-native-gesture-handler` and `react-native-reanimated` in hopes of improving performance over the core animated / pan gesture APIs in react-native.
 
 # Example
 

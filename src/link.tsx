@@ -4,7 +4,7 @@ import { NavigateOptions } from './navigation';
 import { BorderlessButton } from 'react-native-gesture-handler';
 import { NavigateContext } from './navigator';
 
-interface LinkProps {
+export interface LinkProps {
   to: string;
   state?: Object;
   children: any;
@@ -21,7 +21,7 @@ function Link({ to, state, children, style, options }: LinkProps) {
           <BorderlessButton
             onPress={() => {
               requestAnimationFrame(() => {
-                navigate(to, state);
+                navigate(to, state, options);
               });
             }}
             style={[style]}

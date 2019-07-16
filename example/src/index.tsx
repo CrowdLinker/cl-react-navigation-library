@@ -19,7 +19,7 @@ function App() {
   return (
     <AppContainer>
       <Navigator routes={routes} showLocationBar>
-        {({ activeIndex }: any) => (
+        {({ activeIndex }) => (
           <>
             <Tabs pan={{ enabled: false }}>
               <Index routes={routes} />

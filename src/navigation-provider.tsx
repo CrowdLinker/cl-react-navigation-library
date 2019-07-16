@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigation, createNavigation, NavigateOptions } from './navigation';
 import { BackHandler } from 'react-native';
 import { LocationBar } from './location-bar';
+import { NavigatorChild } from './navigator';
 
 export const NavigationContext = React.createContext<Navigation | undefined>(
   undefined
@@ -18,7 +19,7 @@ export const BackContext = React.createContext(NOOP as any);
 export interface NavigationProps {
   initialPath?: string;
   showLocationBar?: boolean;
-  children: any;
+  children: NavigatorChild;
 }
 
 class NavigationProviderImpl extends React.Component<

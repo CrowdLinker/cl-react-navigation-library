@@ -7,7 +7,7 @@ import {
   RootNavigateContext,
   BackContext,
 } from './navigation-provider';
-import { Back } from './navigation';
+import { Back, NavigateOptions } from './navigation';
 import { Screen } from './screen';
 
 const NOOP = () => {};
@@ -33,12 +33,27 @@ export const NavigatorContext = createContext<NavigatorState>({
   renderScreens: NOOP,
 });
 
-type NavigateFn = (to: string, state?: Object) => void;
+type NavigateFn = (
+  to: string,
+  state?: Object,
+  options?: NavigateOptions
+) => void;
 
 export const NavigateContext = createContext<NavigateFn>(NOOP);
 
+interface RenderProps {
+  activeIndex: number;
+  state: any;
+  navigate: (to: string, state: any) => void;
+  back: (steps: number) => void;
+  location: string;
+}
+
+type RenderProp = (props: RenderProps) => any;
+export type NavigatorChild = React.ReactNode | RenderProp;
+
 interface NavigatorImplProps {
-  children: any;
+  children: NavigatorChild;
   basepath: string;
   location: string;
   routes: string[];
@@ -102,14 +117,14 @@ class NavigatorImpl extends Component<NavigatorImplProps, NavigatorState> {
     });
   };
 
-  navigate = (to: string, state?: Object) => {
+  navigate = (to: string, state?: Object, options?: NavigateOptions) => {
     const { basepath, navigate } = this.props;
 
     if (state) {
       this.setNavigatorState({ ...state });
     }
 
-    navigate(to, basepath);
+    navigate(to, basepath, options);
   };
 
   renderScreens = (
@@ -127,7 +142,7 @@ class NavigatorImpl extends Component<NavigatorImplProps, NavigatorState> {
 
       return (
         <Screen active={active} path={pathname}>
-          {cloneElement(element, { ...params, query })}
+          {cloneElement(element, { ...params, query, path })}
         </Screen>
       );
     });
@@ -163,7 +178,8 @@ class NavigatorImpl extends Component<NavigatorImplProps, NavigatorState> {
       <NavigateContext.Provider value={this.navigate}>
         <NavigatorContext.Provider value={this.state}>
           {typeof children === 'function'
-            ? children({
+            ? // @ts-ignore
+              children({
                 activeIndex: this.state.activeIndex,
                 state: this.state.state,
                 navigate: this.navigate,
@@ -189,7 +205,7 @@ function Navigator({
   defaultIndex,
   routes,
   ...rest
-}: NavigatorProps & NavigationProps) {
+}: NavigationProps & NavigatorProps & { children: NavigatorChild }) {
   return (
     <BasepathContext.Consumer>
       {(basepath = '/') => (

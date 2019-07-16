@@ -3,7 +3,7 @@ import { View, StyleSheet, Platform, ViewStyle, StyleProp } from 'react-native';
 import { NavigationContext } from './navigation-provider';
 import { getStatusBarHeight, getBottomSpace } from './iphone-x-helpers';
 import { NavigatorContext } from './navigator';
-import { Link } from './link';
+import { Link, LinkProps } from './link';
 
 interface HeadersProps {
   activeIndex: number;
@@ -69,16 +69,20 @@ function Tabbar({ children, ...rest }: HeaderProps) {
 }
 
 interface TabProps {
-  to: string;
-  children: any;
   active?: boolean; // implicit prop
-  style?: StyleProp<ViewStyle>;
   activeStyle?: StyleProp<ViewStyle>;
 }
 
-function Tab({ to, children, active, style, activeStyle }: TabProps) {
+function Tab({
+  to,
+  children,
+  active,
+  style,
+  activeStyle,
+  ...rest
+}: TabProps & LinkProps) {
   return (
-    <Link to={to} style={[styles.tab, style, active && activeStyle]}>
+    <Link to={to} style={[styles.tab, style, active && activeStyle]} {...rest}>
       {Children.map(children, (element: any) =>
         cloneElement(element, { active })
       )}

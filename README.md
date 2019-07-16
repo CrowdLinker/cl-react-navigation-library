@@ -49,6 +49,22 @@ Having routing at the core of your app architecture has a lot of benefits:
 
 This library uses `react-native-gesture-handler` and `react-native-reanimated` in hopes of improving performance over the core animated / pan gesture APIs in react-native.
 
+# Install 
+
+`yarn add react-navigation-library`
+
+If you're using expo, all dependencies are already installed by default. If not, you'll need to install two dependencies along with this library: 
+
+```
+yarn add react-native-gesture-handler 
+yarn add react-native-reanimated
+```
+
+There are additional steps to setting these up:
+
+- [react-native-gesture-handler](https://kmagiera.github.io/react-native-gesture-handler/docs/getting-started.html)
+- [react-native-reanimated](https://github.com/kmagiera/react-native-reanimated#installation)
+
 # Example
 
 ```

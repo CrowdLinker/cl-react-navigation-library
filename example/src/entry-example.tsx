@@ -13,7 +13,7 @@ import { TextInput, BorderlessButton } from 'react-native-gesture-handler';
 function Entry({  }: NavigatorScreen) {
   return (
     <Navigator routes={['signup-form', '/', 'login-form']} defaultIndex={1}>
-      {({ navigate, state }: any) => (
+      {({ state }: any) => (
         <>
           <Headers>
             <Header>
@@ -27,9 +27,9 @@ function Entry({  }: NavigatorScreen) {
             </Header>
           </Headers>
           <Tabs>
-            <Signup navigate={navigate} />
+            <Signup />
             <SelectionScreen email={state.email} />
-            <Login navigate={navigate} />
+            <Login />
           </Tabs>
         </>
       )}
@@ -37,28 +37,18 @@ function Entry({  }: NavigatorScreen) {
   );
 }
 
-function Signup({ navigate }: any) {
-  function handleSubmit(email: string, password: string) {
-    // return to selection screen
-    navigate('./', { email, password });
-  }
-
+function Signup() {
   return (
     <Screen background="coral">
-      <Form title="Signup" onSubmit={handleSubmit} />
+      <Form title="Signup" />
     </Screen>
   );
 }
 
-function Login({ navigate }: any) {
-  function handleSubmit(email: string, password: string) {
-    // return to selection screen
-    navigate('./', { email, password });
-  }
-
+function Login() {
   return (
     <Screen background="cadetblue">
-      <Form title="Login" onSubmit={handleSubmit} />
+      <Form title="Login" />
     </Screen>
   );
 }
@@ -84,13 +74,9 @@ function SelectionScreen({ email = '' }: any) {
   );
 }
 
-function Form({ onSubmit }: any) {
+function Form() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  function handleSubmit() {
-    onSubmit(email, password);
-  }
 
   return (
     <Screen>
@@ -114,9 +100,9 @@ function Form({ onSubmit }: any) {
           style={styles.input}
         />
 
-        <BorderlessButton onPress={handleSubmit} style={styles.button}>
+        <Link to="./" style={styles.button} state={{ email }}>
           <Text style={{ textAlign: 'center' }}>Submit</Text>
-        </BorderlessButton>
+        </Link>
       </View>
     </Screen>
   );

@@ -9,19 +9,31 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Entry } from './entry-example';
+import { Feeds } from './feeds-example';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Link, Navigator, Tabs, BOTTOM_SPACE } from 'react-navigation-library';
 
 function App() {
-  const routes = ['/', '/login'];
+  const routes = ['/', '/login', '/feeds'];
 
   return (
     <AppContainer>
       <Navigator routes={routes} showLocationBar>
-        <Tabs pan={{ enabled: false }}>
-          <Index routes={routes} />
-          <Entry />
-        </Tabs>
+        {({ activeIndex }: any) => (
+          <>
+            <Tabs pan={{ enabled: false }}>
+              <Index routes={routes} />
+              <Entry unmountOnExit />
+              <Feeds unmountOnExit />
+            </Tabs>
+
+            {activeIndex === 1 && (
+              <Link to="/" style={styles.homeButton}>
+                <Text style={styles.title}>Home</Text>
+              </Link>
+            )}
+          </>
+        )}
       </Navigator>
     </AppContainer>
   );
@@ -42,7 +54,12 @@ function Index({ routes }: any) {
           <Link
             key={route}
             to={`${route}`}
-            style={{ borderWidth: 1, borderRadius: 4, padding: 10 }}
+            style={{
+              borderWidth: 1,
+              borderRadius: 4,
+              padding: 10,
+              marginVertical: 10,
+            }}
           >
             <Text>{route}</Text>
           </Link>
@@ -86,16 +103,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'absolute',
     bottom: BOTTOM_SPACE + 10,
-  },
-
-  card: {
-    height: 75,
-    width: '100%',
-    borderRadius: 4,
-    borderWidth: 1,
-    marginVertical: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 
   title: {

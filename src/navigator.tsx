@@ -174,19 +174,23 @@ class NavigatorImpl extends Component<NavigatorImplProps, NavigatorState> {
   render() {
     const { children, location, back } = this.props;
 
+    let c = children;
+
+    if (typeof children === 'function') {
+      // @ts-ignore
+      c = children({
+        activeIndex: this.state.activeIndex,
+        state: this.state.state,
+        navigate: this.navigate,
+        back: back,
+        location,
+      });
+    }
+
     return (
       <NavigateContext.Provider value={this.navigate}>
         <NavigatorContext.Provider value={this.state}>
-          {typeof children === 'function'
-            ? // @ts-ignore
-              children({
-                activeIndex: this.state.activeIndex,
-                state: this.state.state,
-                navigate: this.navigate,
-                back: back,
-                location,
-              })
-            : children}
+          {c}
         </NavigatorContext.Provider>
       </NavigateContext.Provider>
     );

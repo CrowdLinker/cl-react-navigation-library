@@ -20,7 +20,7 @@ Having routing at the core of your app architecture has a lot of benefits:
 
 - deep links are a lot easier to set up
 - navigating to specific screens while developing is a breeze
-- your markup is simpler to follow
+- your navigation logic is simpler to follow
 - rendering navigators in isolation is extremely useful while developing / running integration tests
 
 ## Component-driven
@@ -32,6 +32,7 @@ Having routing at the core of your app architecture has a lot of benefits:
 
 **Why?**
 
+- composing navigators inside other navigators is much easier to setup
 - familiar behaviour, its like any other react tree you've worked with
 - passing props and state is entirely up to you
 - more flexibility and control over what your app looks like because you're using your own components
@@ -43,12 +44,32 @@ Having routing at the core of your app architecture has a lot of benefits:
 
 **Why?**
 
-Panning and swiping behaviours are an important part of any native app, so these are provided to you out of the box. They can be configured to your app's needs or turned off completely. This library uses `react-native-gesture-handler` and `react-native-reanimated` in hopes of improving performance over the core animated / pan gesture APIs in react-native.
+- panning and swiping behaviours are too important to ignore
+- they can be configured to your app's needs or turned off via navigator props 
+
+This library uses `react-native-gesture-handler` and `react-native-reanimated` in hopes of improving performance over the core animated / pan gesture APIs in react-native.
+
+# Install 
+
+`yarn add react-navigation-library`
+
+If you're using expo, all dependencies are already installed by default. If not, you'll need to install two dependencies along with this library: 
+
+```
+yarn add react-native-gesture-handler 
+yarn add react-native-reanimated
+```
+
+There are additional steps to setting these up:
+
+- [react-native-gesture-handler](https://kmagiera.github.io/react-native-gesture-handler/docs/getting-started.html)
+- [react-native-reanimated](https://github.com/kmagiera/react-native-reanimated#installation)
 
 # Example
 
 ```
 import React from 'react'
+import { View } from 'react-native'
 import { Navigator, Tabs, Link } from 'react-navigation-library'
 import { Signup, Login } from './forms'
 import { Feeds } from './feeds'

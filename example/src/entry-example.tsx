@@ -8,31 +8,28 @@ import {
   Headers,
   Header,
 } from 'react-navigation-library';
-import { TextInput, BorderlessButton } from 'react-native-gesture-handler';
+import { TextInput } from 'react-native-gesture-handler';
 
 function Entry({  }: NavigatorScreen) {
   return (
     <Navigator routes={['signup-form', '/', 'login-form']} defaultIndex={1}>
-      {({ state }: any) => (
-        <>
-          <Headers>
-            <Header>
-              <Text style={styles.title}>Signup</Text>
-            </Header>
-            <Header>
-              <Text style={styles.title}>Select Option</Text>
-            </Header>
-            <Header>
-              <Text style={styles.title}>Login</Text>
-            </Header>
-          </Headers>
-          <Tabs>
-            <Signup />
-            <SelectionScreen email={state.email} />
-            <Login />
-          </Tabs>
-        </>
-      )}
+      <Headers>
+        <Header>
+          <Text style={styles.title}>Signup</Text>
+        </Header>
+        <Header>
+          <Text style={styles.title}>Select Option</Text>
+        </Header>
+        <Header>
+          <Text style={styles.title}>Login</Text>
+        </Header>
+      </Headers>
+
+      <Tabs>
+        <Signup />
+        <SelectionScreen />
+        <Login />
+      </Tabs>
     </Navigator>
   );
 }
@@ -40,7 +37,7 @@ function Entry({  }: NavigatorScreen) {
 function Signup() {
   return (
     <Screen background="coral">
-      <Form title="Signup" />
+      <Form />
     </Screen>
   );
 }
@@ -48,7 +45,7 @@ function Signup() {
 function Login() {
   return (
     <Screen background="cadetblue">
-      <Form title="Login" />
+      <Form />
     </Screen>
   );
 }
@@ -56,12 +53,6 @@ function Login() {
 function SelectionScreen({ email = '' }: any) {
   return (
     <Screen background="aquamarine">
-      {Boolean(email) && (
-        <Text
-          style={[styles.title, { flex: 0, marginVertical: 20 }]}
-        >{`Thanks ${email}!`}</Text>
-      )}
-
       <View style={{ flex: 1, alignItems: 'center' }}>
         <Link to="signup-form" style={styles.button}>
           <Text>Signup</Text>
@@ -100,7 +91,7 @@ function Form() {
           style={styles.input}
         />
 
-        <Link to="./" style={styles.button} state={{ email }}>
+        <Link to="/feeds/home" style={styles.button}>
           <Text style={{ textAlign: 'center' }}>Submit</Text>
         </Link>
       </View>

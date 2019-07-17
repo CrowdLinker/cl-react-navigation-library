@@ -4,6 +4,12 @@ A component-driven React Native navigation library.
 
 - [Example project](https://github.com/CrowdLinker/react-navigation-library/blob/master/example/src/index.tsx)
 
+<p align="center">
+  <img src="docs/assets/tabview-locationbar.gif">
+  <img src="docs/assets/tabview-swipes.gif">
+  <img src="docs/assets/login-location.gif">
+</p>
+
 # Features
 
 ## Routing
@@ -45,18 +51,18 @@ Having routing at the core of your app architecture has a lot of benefits:
 **Why?**
 
 - panning and swiping behaviours are too important to ignore
-- they can be configured to your app's needs or turned off via navigator props 
+- they can be configured to your app's needs or turned off via navigator props
 
 This library uses `react-native-gesture-handler` and `react-native-reanimated` in hopes of improving performance over the core animated / pan gesture APIs in react-native.
 
-# Install 
+# Install
 
 `yarn add react-navigation-library`
 
-If you're using expo, all dependencies are already installed by default. If not, you'll need to install two dependencies along with this library: 
+If you're using expo, all dependencies are already installed by default. If not, you'll need to install two dependencies along with this library:
 
 ```
-yarn add react-native-gesture-handler 
+yarn add react-native-gesture-handler
 yarn add react-native-reanimated
 ```
 
@@ -69,42 +75,49 @@ There are additional steps to setting these up:
 
 ```
 import React from 'react'
-import { View } from 'react-native'
-import { Navigator, Tabs, Link } from 'react-navigation-library'
-import { Signup, Login } from './forms'
-import { Feeds } from './feeds'
+import { Navigator, Tabs, Link, Headers, Header, Tabbar, Tab } from 'react-navigation-library'
 
-function Entry() {
+<!-- ./feeds.tsx  -->
+<!-- full src at /example/src/feeds-example --> -->
+
+function Feeds({  }: NavigatorScreen) {
   return (
-    <Navigator routes={[ 'signup', '/', 'login' ]}>
+    <Navigator routes={['home', 'popular', 'news']}>
+      <Headers>
+        <FeedHeader title="Home" />
+        <FeedHeader title="Popular" />
+        <FeedHeader title="News" />
+      </Headers>
+
       <Tabs>
-        <Signup />
-        <SelectionScreen />
-        <Login />
+        <Feed items={items} />
+        <Feed items={items} />
+        <Feed items={items} />
       </Tabs>
+
+      <Tabbar>
+        <Tab to="home" activeStyle={{ borderWidth: 1 }}>
+          <Text>Home</Text>
+        </Tab>
+        <Tab to="popular" activeStyle={{ borderWidth: 1 }}>
+          <Text>Popular</Text>
+        </Tab>
+        <Tab to="news" activeStyle={{ borderWidth: 1 }}>
+          <Text>News</Text>
+        </Tab>
+      </Tabbar>
     </Navigator>
-  )
+  );
 }
 
-function SelectionScreen() {
-  return (
-    <View style={{ flex: 1 }}>
-      <Link to='signup'>
-        <Text>Signup</Text>
-      </Link>
-
-      <Link to='login'>
-        <Text>Login</Text>
-      </Link>
-    </View>
-  )
-}
+<!-- ./app.tsx -->
 
 function App() {
   return (
-    <Navigator routes={[ 'entry',  'feeds' ]} initialPath='/entry'>
+    <Navigator routes={[ 'login', '/', 'feeds' ]} initialPath='/feeds/home' showLocationBar>
       <Tabs>
-        <Entry unmountOnExit />
+        <Entry />
+        <Index />
         <Feeds />
       </Tabs>
     </Navigator>
@@ -115,3 +128,5 @@ export default App
 ```
 
 # API Reference
+
+WIP

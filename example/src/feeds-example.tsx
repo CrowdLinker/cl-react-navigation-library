@@ -24,15 +24,9 @@ function Feeds({  }: NavigatorScreen) {
   return (
     <Navigator routes={['home', 'popular', 'news']}>
       <Headers>
-        <Header style={{ justifyContent: 'center' }}>
-          <Text style={styles.title}>Home</Text>
-        </Header>
-        <Header style={{ justifyContent: 'center' }}>
-          <Text style={styles.title}>News</Text>
-        </Header>
-        <Header style={{ justifyContent: 'center' }}>
-          <Text style={styles.title}>Popular</Text>
-        </Header>
+        <FeedHeader title="Home" />
+        <FeedHeader title="Popular" />
+        <FeedHeader title="News" />
       </Headers>
 
       <Tabs>
@@ -70,7 +64,7 @@ function Feed({ items }: any) {
 function CardList({ items }: any) {
   return (
     <FlatList
-      style={{ flex: 1, borderWidth: 1 }}
+      style={{ flex: 1, backgroundColor: 'white' }}
       contentContainerStyle={{ padding: 10 }}
       data={items}
       renderItem={Card}
@@ -89,16 +83,19 @@ function Card({ item }: any) {
 
 function ProfileView({ id }: any) {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'white',
-      }}
-    >
+    <View style={styles.profile}>
       <Text style={styles.title}>{`Profile: ${id}`}</Text>
     </View>
+  );
+}
+
+function FeedHeader({ title }: any) {
+  return (
+    <Header>
+      <View style={styles.centered}>
+        <Text style={styles.title}>{title}</Text>
+      </View>
+    </Header>
   );
 }
 
@@ -117,6 +114,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  profile: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
   },
 });
 

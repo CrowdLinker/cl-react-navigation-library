@@ -1,5 +1,5 @@
 // app entry
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AppRegistry,
   Platform,
@@ -14,34 +14,22 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { Link, Navigator, Tabs, BOTTOM_SPACE } from 'react-navigation-library';
 
 function App() {
-  const routes = ['/', '/login', '/feeds'];
+  const routes = ['/login', '/', '/feeds'];
 
   return (
     <AppContainer>
       <Navigator routes={routes} showLocationBar>
-        {({ activeIndex }) => (
-          <>
-            <Tabs pan={{ enabled: false }}>
-              <Index routes={routes} />
-              <Entry unmountOnExit />
-              <Feeds unmountOnExit />
-            </Tabs>
-
-            {activeIndex === 1 && (
-              <Link to="/" style={styles.homeButton}>
-                <Text style={styles.title}>Home</Text>
-              </Link>
-            )}
-          </>
-        )}
+        <Tabs pan={{ enabled: false }}>
+          <Entry />
+          <Index />
+          <Feeds />
+        </Tabs>
       </Navigator>
     </AppContainer>
   );
 }
 
-function Index({ routes }: any) {
-  const [, ...rest] = routes;
-
+function Index() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Text style={styles.title}>Index</Text>
@@ -50,20 +38,12 @@ function Index({ routes }: any) {
         style={{ flex: 1 }}
         contentContainerStyle={{ alignItems: 'center', paddingTop: 20 }}
       >
-        {rest.map((route: string) => (
-          <Link
-            key={route}
-            to={`${route}`}
-            style={{
-              borderWidth: 1,
-              borderRadius: 4,
-              padding: 10,
-              marginVertical: 10,
-            }}
-          >
-            <Text>{route}</Text>
-          </Link>
-        ))}
+        <Link to={`/login`} style={styles.link}>
+          <Text>Login</Text>
+        </Link>
+        <Link to={`/feeds/home`} style={styles.link}>
+          <Text>Feeds</Text>
+        </Link>
       </ScrollView>
     </SafeAreaView>
   );
@@ -109,6 +89,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+
+  link: {
+    borderWidth: 1,
+    borderRadius: 4,
+    padding: 10,
+    marginVertical: 10,
   },
 });
 

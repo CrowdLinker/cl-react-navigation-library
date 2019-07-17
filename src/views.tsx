@@ -14,7 +14,7 @@ interface HeadersProps {
 function HeadersImpl({ activeIndex, defaultIndex, children }: HeadersProps) {
   const child = children[activeIndex] || children[defaultIndex];
 
-  return <View>{child}</View>;
+  return child;
 }
 
 function Headers({ children }: { children: any }) {

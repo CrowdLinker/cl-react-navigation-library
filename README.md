@@ -7,7 +7,6 @@ A component-driven React Native navigation library.
 <p align="center">
   <img src="docs/assets/tabview-locationbar.gif">
   <img src="docs/assets/tabview-swipes.gif">
-  <img src="docs/assets/login-location.gif">
 </p>
 
 # Features
